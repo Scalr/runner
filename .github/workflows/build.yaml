@@ -59,8 +59,8 @@ jobs:
 
       - name: Test Docker Image
         run: |
-          docker run --rm scalr/runner:sha-${{ github.sha }} gcloud version
-          docker run --rm scalr/runner:sha-${{ github.sha }} aws --version
-          docker run --rm scalr/runner:sha-${{ github.sha }} az --version
-          docker run --rm scalr/runner:sha-${{ github.sha }} kubectl version --client
-          docker run --rm scalr/runner:sha-${{ github.sha }} scalr -version
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'gcloud version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'aws --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'az --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'kubectl version --client'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'scalr -version'
