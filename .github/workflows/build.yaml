@@ -14,6 +14,7 @@ on:
 
 jobs:
   build:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -59,8 +60,8 @@ jobs:
 
       - name: Test Docker Image
         run: |
-          docker run --rm scalr/runner:sha-${{ github.sha }} 'gcloud version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} 'aws --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} 'az --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} 'kubectl version --client'
-          docker run --rm scalr/runner:sha-${{ github.sha }} 'scalr -version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} gcloud version
+          docker run --rm scalr/runner:sha-${{ github.sha }} aws --version
+          docker run --rm scalr/runner:sha-${{ github.sha }} az --version
+          docker run --rm scalr/runner:sha-${{ github.sha }} kubectl version --client
+          docker run --rm scalr/runner:sha-${{ github.sha }} scalr -version
