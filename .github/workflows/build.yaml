@@ -50,7 +50,6 @@ jobs:
             AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
             AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
             SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-          platforms: linux/amd64
           # platforms: linux/amd64,linux/arm64
           # cache-from: type=registry,ref=scalr/runner:buildcache
           # cache-to: type=registry,ref=scalr/runner:buildcache
