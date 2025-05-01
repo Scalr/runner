@@ -52,7 +52,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=scalr/runner:buildcache
           cache-to: type=registry,ref=scalr/runner:buildcache
-          load: true
+          push: false
           tags: |
             scalr/runner:latest
             scalr/runner:${{ steps.image_tag.outputs.tag }}
