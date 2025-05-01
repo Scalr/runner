@@ -3,7 +3,7 @@ name: Release Runner Image
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - '*.*.*'
 
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
       - name: Format Image Tag
         id: image_tag
         run: |
-          echo "tag=${GITHUB_REF#refs/tags/v}" | tee -a $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_OUTPUT
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
