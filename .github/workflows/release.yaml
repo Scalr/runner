@@ -35,22 +35,27 @@ jobs:
           echo "azure_cli=$(grep azure_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
           echo "scalr_cli=$(grep scalr_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
 
-      # - name: Build Docker image
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     build-args: |
-      #       KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-      #       GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-      #       AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-      #       AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-      #       SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-      #     platforms: linux/amd64,linux/arm64
-      #     cache-from: type=registry,ref=scalr/runner:buildcache
-      #     cache-to: type=registry,ref=scalr/runner:buildcache
-      #     push: true
-      #     tags: |
-      #       scalr/runner:latest
-      #       scalr/runner:${{ github.ref_name }}
+      - name: Format Image Tag
+        id: image_tag
+        run: |
+          echo "tag=${GITHUB_REF#refs/tags/v}" | tee -a $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          build-args: |
+            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
+            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
+            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
+            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
+            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=registry,ref=scalr/runner:buildcache
+          cache-to: type=registry,ref=scalr/runner:buildcache
+          load: true
+          tags: |
+            scalr/runner:latest
+            scalr/runner:${{ steps.image_tag.outputs.tag }}
 
   update_changelog:
     name: Update Changelog
@@ -72,13 +77,12 @@ jobs:
           CHANGELOG_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           github_changelog_generator -u Scalr -p runner --output CHANGELOG.md
-          cat CHANGELOG.md
-          # git add CHANGELOG.md
-          # if [ ! -n "$(git status -s)" ]; then
-          #   echo "NOTHING TO COMMIT"
-          # else
-          #   git config user.name "${GITHUB_ACTOR}"
-          #   git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          #   git commit -m "Update CHANGELOG.md"
-          #   git push --no-verify
-          # fi
+          git add CHANGELOG.md
+          if [ ! -n "$(git status -s)" ]; then
+            echo "NOTHING TO COMMIT"
+          else
+            git config user.name "${GITHUB_ACTOR}"
+            git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+            git commit -m "Update CHANGELOG.md"
+            git push --no-verify
+          fi
