@@ -2,7 +2,7 @@
 
 This is the Git repo of the official runner image.
 
-The image is based on the [`debian:bullseye-slim`](https://hub.docker.com/_/debian),
+The image is based on the [`debian:bookworm-slim`](https://hub.docker.com/_/debian),
 and contains the following software:
 
 * Archivators - zip, tar, gzip
