@@ -2,8 +2,8 @@ name: Build Runner Image
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
   pull_request:
     types:
       - labeled

@@ -71,7 +71,7 @@ jobs:
         env:
           CHANGELOG_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          github_changelog_generator -u Scalr -p runner --token --output
+          github_changelog_generator -u Scalr -p runner --output
           # git add CHANGELOG.md
           # if [ ! -n "$(git status -s)" ]; then
           #   echo "NOTHING TO COMMIT"
