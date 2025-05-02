@@ -1,0 +1,62 @@
+name: Build Runner Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - labeled
+      - opened
+      - ready_for_review
+      - reopened
+      - synchronize
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Read Versions
+        id: versions
+        run: |
+          echo "kubectl=$(grep kubectl versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "gcloud=$(grep gcloud versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "aws_cli=$(grep aws_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "azure_cli=$(grep azure_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "scalr_cli=$(grep scalr_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          build-args: |
+            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
+            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
+            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
+            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
+            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
+          cache-from: type=registry,ref=scalr/runner:buildcache
+          cache-to: type=registry,ref=scalr/runner:buildcache
+          load: true
+          tags: |
+            scalr/runner:sha-${{ github.sha }}
+
+      - name: Test Docker Image
+        run: |
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'gcloud version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'aws --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'az --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'kubectl version --client'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'scalr -version'
