@@ -11,6 +11,15 @@ SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
 # Base Software
 RUN <<EOT
+  # Install fresh glibc
+  echo "deb http://ftp.debian.org/debian sid main" >> /etc/apt/sources.list
+  apt-get update -y
+  apt-get -t sid install -y --no-install-recommends \
+    libc6=2.41-7 \
+    libc6-dev=2.41-7 \
+    libc6-dbg=2.41-7
+  sed -i '$ d' /etc/apt/sources.list
+  # Install base software
   apt-get update -y
   apt-get install -y --no-install-recommends \
     wget curl ca-certificates \
@@ -23,8 +32,8 @@ RUN <<EOT
   [ "${TARGETARCH}" = "amd64" ] && SESSION_MANAGER_ARCH="64bit" || SESSION_MANAGER_ARCH="arm64"
   curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${SESSION_MANAGER_ARCH}/session-manager-plugin.deb" -o "session-manager-plugin.deb"
   dpkg -i session-manager-plugin.deb
-  rm session-manager-plugin.deb
   # Cleanup
+  rm session-manager-plugin.deb
   apt-get clean
   apt-get autoremove -y
   rm -rf /var/lib/apt/lists/*
