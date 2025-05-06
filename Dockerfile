@@ -3,7 +3,7 @@
 #
 # Note: This is a PUBLIC image, it should not contain any sensitive data.
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG TARGETARCH
 
@@ -11,14 +11,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
 # Base Software
 RUN <<EOT
-  # Install fresh glibc
-  echo "deb http://ftp.debian.org/debian sid main" >> /etc/apt/sources.list
-  apt-get update -y
-  apt-get -t sid install -y --no-install-recommends \
-    libc6=2.41-7 \
-    libc6-dev=2.41-7 \
-    libc6-dbg=2.41-7
-  sed -i '$ d' /etc/apt/sources.list
   # Install base software
   apt-get update -y
   apt-get install -y --no-install-recommends \
@@ -83,7 +75,7 @@ EOT
 ARG AZURE_CLI_VERSION
 LABEL azure-cli.version=${AZURE_CLI_VERSION}
 RUN <<EOT
-  AZ_DIST=$(lsb_release -cs)
+  AZ_DIST=bookworm
   mkdir -p /etc/apt/keyrings
   curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/keyrings/microsoft.gpg > /dev/null
   chmod go+r /etc/apt/keyrings/microsoft.gpg
