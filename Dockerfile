@@ -3,7 +3,7 @@
 #
 # Note: This is a PUBLIC image, it should not contain any sensitive data.
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG TARGETARCH
 
@@ -11,6 +11,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
 # Base Software
 RUN <<EOT
+  # Install base software
   apt-get update -y
   apt-get install -y --no-install-recommends \
     wget curl ca-certificates \
@@ -23,8 +24,8 @@ RUN <<EOT
   [ "${TARGETARCH}" = "amd64" ] && SESSION_MANAGER_ARCH="64bit" || SESSION_MANAGER_ARCH="arm64"
   curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${SESSION_MANAGER_ARCH}/session-manager-plugin.deb" -o "session-manager-plugin.deb"
   dpkg -i session-manager-plugin.deb
-  rm session-manager-plugin.deb
   # Cleanup
+  rm session-manager-plugin.deb
   apt-get clean
   apt-get autoremove -y
   rm -rf /var/lib/apt/lists/*
@@ -74,7 +75,7 @@ EOT
 ARG AZURE_CLI_VERSION
 LABEL azure-cli.version=${AZURE_CLI_VERSION}
 RUN <<EOT
-  AZ_DIST=$(lsb_release -cs)
+  AZ_DIST=bookworm
   mkdir -p /etc/apt/keyrings
   curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/keyrings/microsoft.gpg > /dev/null
   chmod go+r /etc/apt/keyrings/microsoft.gpg
