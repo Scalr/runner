@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/Scalr/runner/tree/0.1.2) (2025-05-07)
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.1.1...0.1.2)
+
+**Merged pull requests:**
+
+- SCALRCORE-34672 \> Bump Base Image to Debian Trixie [\#2](https://github.com/Scalr/runner/pull/2) ([artemvang](https://github.com/artemvang))
+
 ## [0.1.1](https://github.com/Scalr/runner/tree/0.1.1) (2025-05-02)
 
 [Full Changelog](https://github.com/Scalr/runner/compare/8d1b9b1fe04c32414e9e85babdc66f067b79095c...0.1.1)
