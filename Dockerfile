@@ -32,6 +32,10 @@ RUN <<EOT
   find /usr -name __pycache__ -type d -exec rm -rf {} +
 EOT
 
+# This effectively makes `pip install --break-system-packages ...` the default, allowing
+# to install packages system-wide without needing to initialize a virtual environment.
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+
 # Kubectl
 ARG KUBECTL_VERSION
 LABEL kubectl.version=${KUBECTL_VERSION}
