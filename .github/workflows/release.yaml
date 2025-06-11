@@ -34,6 +34,7 @@ jobs:
           echo "aws_cli=$(grep aws_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
           echo "azure_cli=$(grep azure_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
           echo "scalr_cli=$(grep scalr_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "python=$(grep python versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
 
       - name: Format Image Tag
         id: image_tag
@@ -49,6 +50,7 @@ jobs:
             AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
             AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
             SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
+            PYTHON_VERSION=${{ steps.versions.outputs.python }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=scalr/runner:buildcache
           cache-to: type=registry,ref=scalr/runner:buildcache
