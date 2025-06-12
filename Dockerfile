@@ -18,7 +18,6 @@ RUN <<EOT
     git-core git-lfs openssh-client \
     jq \
     gnupg \
-    python3 python3-pip python3-setuptools python3-wheel \
     zip unzip \
     lsb-release
   [ "${TARGETARCH}" = "amd64" ] && SESSION_MANAGER_ARCH="64bit" || SESSION_MANAGER_ARCH="arm64"
@@ -32,9 +31,39 @@ RUN <<EOT
   find /usr -name __pycache__ -type d -exec rm -rf {} +
 EOT
 
-# This effectively makes `pip install --break-system-packages ...` the default, allowing
-# to install packages system-wide without needing to initialize a virtual environment.
-ENV PIP_BREAK_SYSTEM_PACKAGES=1
+# Install python standalone build.
+ARG PYTHON_VERSION
+LABEL python.version=${PYTHON_VERSION}
+ENV PIP_ROOT_USER_ACTION=ignore
+RUN <<EOT
+  # See: https://gregoryszorc.com/docs/python-build-standalone/main/running.html#extracting-distributions
+  export VERSION="${PYTHON_VERSION}"
+  export RELEASE="20250517"
+  apt-get update -y
+  apt-get install -y --no-install-recommends zstd binutils
+  [ "${TARGETARCH}" = "amd64" ] && export OPTIONS="x86_64-unknown-linux-gnu-pgo+lto-full"
+  [ "${TARGETARCH}" = "arm64" ] && export OPTIONS="aarch64-unknown-linux-gnu-lto-full"
+  curl -L -o python.tar.zst "https://github.com/astral-sh/python-build-standalone/releases/download/${RELEASE}/cpython-${VERSION}+${RELEASE}-${OPTIONS}.tar.zst"
+  tar --zstd -xf python.tar.zst
+  cp -rp python/install/* /usr
+  rm python.tar.zst
+  rm -rf python
+  # Strip debug symbols from shared libraries.
+  strip -d /usr/lib/libpython3.13.so
+  # Remove unneeded packages.
+  rm -rf /usr/lib/Tix* /usr/lib/tcl* /usr/lib/tk* /usr/lib/itcl* /usr/lib/thread*
+  rm -rf /usr/lib/libpython3.13.a
+  rm -rf "/usr/lib/python3.13/config-3.13-$(uname -m)-linux-gnu"
+  rm -rf /usr/lib/python3.13/ensurepip
+  rm -rf /usr/lib/python3.13/tkinker
+  rm -rf /usr/lib/python3.13/test
+  # Cleanup.
+  apt-get remove -y zstd binutils
+  apt-get clean
+  apt-get autoremove -y
+  rm -rf /var/lib/apt/lists/*
+  find /usr -name __pycache__ -type d -exec rm -rf {} +
+EOT
 
 # Kubectl
 ARG KUBECTL_VERSION

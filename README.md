@@ -2,8 +2,7 @@
 
 This is the Git repo of the official runner image.
 
-The image is based on the [`debian:trixie-slim`](https://hub.docker.com/_/debian),
-and contains the following software:
+The image is based on the [`debian:trixie-slim`](https://hub.docker.com/_/debian).
 
 ## Included Tools
 
@@ -33,17 +32,22 @@ This environment comes pre-equipped with a comprehensive suite of tools essentia
   * Kubectl ([0.33.1](https://github.com/kubernetes/kubectl/releases/tag/v0.33.1)) - Kubernetes CLI.
   * Scalr CLI ([0.17.1](https://github.com/Scalr/scalr-cli/releases/tag/v0.17.1)) - The command-line to communicate with the Scalr API.
 
-The versions for Cloud Clients, Kubectl, and Scalr CLI are specifically pinned and detailed in the [versions](./versions) file. All other software included in this environment is sourced directly from the Debian Trixie upstream repositories.
+The versions for Python, Cloud Clients, Kubectl, and Scalr CLI are specifically pinned and detailed in the [versions](./versions) file. All other software included in this environment is sourced directly from the Debian Trixie upstream repositories.
+
+## Python Distribution
+
+The environment uses the [standalone Python build](https://github.com/astral-sh/python-build-standalone) provided by the [astral.sh](https://astral.sh/) team.
 
 ## Runner Image Building
 
 ```bash
 docker buildx build \
+  --build-arg PYTHON_VERSION=3.13.3 \
   --build-arg KUBECTL_VERSION=v1.33.1 \
   --build-arg GCLOUD_VERSION=525.0.0 \
   --build-arg AWS_CLI_VERSION=2.27.1 \
   --build-arg AZURE_CLI_VERSION=2.71.0 \
   --build-arg SCALR_CLI_VERSION=0.17.1 \
   --platform linux/amd64 \
-  -t runner:latest --load .
+  -t scalr/runner:latest --load .
 ```
