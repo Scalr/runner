@@ -139,4 +139,7 @@ RUN <<EOT
   rm -rf scalr_cli.zip
 EOT
 
+# Add scalr user
+RUN useradd -u 1000 -m scalr
+
 ENTRYPOINT ["/bin/bash"]
