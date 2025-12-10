@@ -38,7 +38,7 @@ ENV PIP_ROOT_USER_ACTION=ignore
 RUN <<EOT
   # See: https://gregoryszorc.com/docs/python-build-standalone/main/running.html#extracting-distributions
   export VERSION="${PYTHON_VERSION}"
-  export RELEASE="20250517"
+  export RELEASE="20251209"
   apt-get update -y
   apt-get install -y --no-install-recommends zstd binutils
   [ "${TARGETARCH}" = "amd64" ] && export OPTIONS="x86_64-unknown-linux-gnu-pgo+lto-full"
@@ -49,14 +49,14 @@ RUN <<EOT
   rm python.tar.zst
   rm -rf python
   # Strip debug symbols from shared libraries.
-  strip -d /usr/lib/libpython3.13.so
+  strip -d /usr/lib/libpython3.14.so
   # Remove unneeded packages.
   rm -rf /usr/lib/Tix* /usr/lib/tcl* /usr/lib/tk* /usr/lib/itcl* /usr/lib/thread*
-  rm -rf /usr/lib/libpython3.13.a
-  rm -rf "/usr/lib/python3.13/config-3.13-$(uname -m)-linux-gnu"
-  rm -rf /usr/lib/python3.13/ensurepip
-  rm -rf /usr/lib/python3.13/tkinker
-  rm -rf /usr/lib/python3.13/test
+  rm -rf /usr/lib/libpython3.14.a
+  rm -rf "/usr/lib/python3.14/config-3.14-$(uname -m)-linux-gnu"
+  rm -rf /usr/lib/python3.14/ensurepip
+  rm -rf /usr/lib/python3.14/tkinker
+  rm -rf /usr/lib/python3.14/test
   # Cleanup.
   apt-get remove -y zstd binutils
   apt-get clean
