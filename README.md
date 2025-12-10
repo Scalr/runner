@@ -23,7 +23,7 @@ This environment comes pre-equipped with a comprehensive suite of tools essentia
   * wget - File downloads from the web
   * ca-certificates - Trusted CA certificates
 * **Programming Languages**
-  * Python ([v3.13.3](https://www.python.org/downloads/release/python-3133/)) - General-purpose programming language (release)
+  * Python ([v3.14.2](https://www.python.org/downloads/release/python-3142/)) - General-purpose programming language (release)
   * jq - Command-line JSON processor
 * **Cloud Clients**
   * AWS CLI ([2.27.1](https://github.com/aws/aws-cli/releases/tag/2.27.32)) - Amazon Web Services CLI.
@@ -42,12 +42,12 @@ The environment uses the [standalone Python build](https://github.com/astral-sh/
 
 ```bash
 docker buildx build \
-  --build-arg PYTHON_VERSION=3.13.3 \
-  --build-arg KUBECTL_VERSION=v1.33.1 \
-  --build-arg GCLOUD_VERSION=525.0.0 \
-  --build-arg AWS_CLI_VERSION=2.27.1 \
-  --build-arg AZURE_CLI_VERSION=2.71.0 \
-  --build-arg SCALR_CLI_VERSION=0.17.1 \
+  --build-arg PYTHON_VERSION=3.14.2 \
+  --build-arg KUBECTL_VERSION=v1.34.3 \
+  --build-arg GCLOUD_VERSION=549.0.0 \
+  --build-arg AWS_CLI_VERSION=2.32.13 \
+  --build-arg AZURE_CLI_VERSION=2.81.0 \
+  --build-arg SCALR_CLI_VERSION=0.17.4 \
   --platform linux/amd64 \
   -t scalr/runner:latest --load .
 ```
