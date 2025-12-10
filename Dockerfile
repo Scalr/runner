@@ -38,7 +38,7 @@ ENV PIP_ROOT_USER_ACTION=ignore
 RUN <<EOT
   # See: https://gregoryszorc.com/docs/python-build-standalone/main/running.html#extracting-distributions
   export VERSION="${PYTHON_VERSION}"
-  export RELEASE="20250517"
+  export RELEASE="20251209"
   apt-get update -y
   apt-get install -y --no-install-recommends zstd binutils
   [ "${TARGETARCH}" = "amd64" ] && export OPTIONS="x86_64-unknown-linux-gnu-pgo+lto-full"
