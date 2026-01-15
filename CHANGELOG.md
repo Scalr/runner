@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/Scalr/runner/tree/0.1.5) (2025-12-10)
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.1.4...0.1.5)
+
+**Merged pull requests:**
+
+- SCALRCORE-35910 Add scalr user \(1000:1000\) [\#5](https://github.com/Scalr/runner/pull/5) ([mermoldy](https://github.com/mermoldy))
+
 ## [0.1.4](https://github.com/Scalr/runner/tree/0.1.4) (2025-06-12)
 
 [Full Changelog](https://github.com/Scalr/runner/compare/0.1.3...0.1.4)
