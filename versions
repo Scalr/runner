@@ -4,3 +4,4 @@ aws_cli=2.27.32
 azure_cli=2.74.0
 scalr_cli=0.17.1
 python=3.13.3
+azure_kubelogin=v0.2.13

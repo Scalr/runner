@@ -38,6 +38,7 @@ jobs:
           echo "azure_cli=$(grep azure_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
           echo "scalr_cli=$(grep scalr_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
           echo "python=$(grep python versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "azure_kubelogin=$(grep azure_kubelogin versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
@@ -49,6 +50,7 @@ jobs:
             AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
             SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
             PYTHON_VERSION=${{ steps.versions.outputs.python }}
+            AZURE_KUBELOGIN_VERSION=${{ steps.versions.outputs.azure_kubelogin }}
           cache-from: type=registry,ref=scalr/runner:buildcache
           cache-to: type=registry,ref=scalr/runner:buildcache
           load: true
@@ -65,3 +67,4 @@ jobs:
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'python --version'
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip --version'
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip install requests'
+          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'kubelogin --version'

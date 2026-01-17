@@ -139,6 +139,17 @@ RUN <<EOT
   rm -rf scalr_cli.zip
 EOT
 
+# Azure Kubelogin
+ARG AZURE_KUBELOGIN_VERSION
+LABEL azure-kubelogin.version=${AZURE_KUBELOGIN_VERSION}
+RUN <<EOT
+  curl -fsSL "https://github.com/Azure/kubelogin/releases/download/${AZURE_KUBELOGIN_VERSION}/kubelogin-linux-${TARGETARCH}.zip" -o /tmp/kubelogin.zip
+  unzip -p /tmp/kubelogin.zip "bin/linux_${TARGETARCH}/kubelogin" > /usr/local/bin/kubelogin
+  chmod a+x /usr/local/bin/kubelogin
+  # Cleanup
+  rm -f /tmp/kubelogin.zip
+EOT
+
 # Add the scalr user (optional; used when running the container with UID 1000).
 RUN useradd -u 1000 -m scalr
 
