@@ -1,16 +1,13 @@
 # Changelog
 
-## Version Bump (2026-01-19)
+## [0.2.0](https://github.com/Scalr/runner/tree/0.2.0) (2026-01-19)
 
-**Updated dependencies:**
+[Full Changelog](https://github.com/Scalr/runner/compare/0.1.5...0.2.0)
 
-- kubectl: v1.33.1 -> v1.35.0
-- gcloud: 525.0.0 -> 552.0.0
-- aws_cli: 2.27.32 -> 2.33.2
-- azure_cli: 2.74.0 -> 2.82.0
-- scalr_cli: 0.17.1 -> 0.17.6
-- python: 3.13.3 -> 3.13.11
+**Merged pull requests:**
 
+- Fix aarch64 python builds [\#9](https://github.com/Scalr/runner/pull/9) ([mermoldy](https://github.com/mermoldy))
+- SCALRCORE-37058 Bump versions and add -python39 build [\#8](https://github.com/Scalr/runner/pull/8) ([mermoldy](https://github.com/mermoldy))
 
 ## [0.1.5](https://github.com/Scalr/runner/tree/0.1.5) (2025-12-10)
 
