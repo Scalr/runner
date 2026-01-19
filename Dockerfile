@@ -46,7 +46,7 @@ RUN <<EOT
   apt-get update -y
   apt-get install -y --no-install-recommends zstd binutils
   [ "${TARGETARCH}" = "amd64" ] && export OPTIONS="x86_64-unknown-linux-gnu-pgo+lto-full"
-  [ "${TARGETARCH}" = "arm64" ] && export OPTIONS="aarch64-unknown-linux-gnu-lto-full"
+  [ "${TARGETARCH}" = "arm64" ] && export OPTIONS="aarch64-unknown-linux-gnu-pgo+lto-full"
   curl -L -o python.tar.zst "https://github.com/astral-sh/python-build-standalone/releases/download/${RELEASE}/cpython-${VERSION}+${RELEASE}-${OPTIONS}.tar.zst"
   tar --zstd -xf python.tar.zst
   cp -rp python/install/* /usr
