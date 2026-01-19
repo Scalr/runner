@@ -51,3 +51,15 @@ docker buildx build \
   --platform linux/amd64 \
   -t scalr/runner:latest --load .
 ```
+
+## Bumping Versions
+
+To update all tool versions to their latest releases, run:
+
+```bash
+./bump-versions.sh
+```
+
+This script fetches the latest versions from upstream sources and updates the [versions](./versions) file and README.md.
+
+Requirements: `curl` and `jq`.
