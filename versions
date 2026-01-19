@@ -4,3 +4,4 @@ aws_cli=2.33.2
 azure_cli=2.82.0
 scalr_cli=0.17.6
 python=3.13.11
+python_release=20260114

@@ -33,12 +33,16 @@ EOT
 
 # Install python standalone build.
 ARG PYTHON_VERSION
+ARG PYTHON_RELEASE
 LABEL python.version=${PYTHON_VERSION}
 ENV PIP_ROOT_USER_ACTION=ignore
+
 RUN <<EOT
   # See: https://gregoryszorc.com/docs/python-build-standalone/main/running.html#extracting-distributions
   export VERSION="${PYTHON_VERSION}"
-  export RELEASE="20250517"
+  export RELEASE="${PYTHON_RELEASE}"
+  # Extract major.minor version (e.g., 3.13 from 3.13.11)
+  export PY_MINOR="${VERSION%.*}"
   apt-get update -y
   apt-get install -y --no-install-recommends zstd binutils
   [ "${TARGETARCH}" = "amd64" ] && export OPTIONS="x86_64-unknown-linux-gnu-pgo+lto-full"
@@ -49,14 +53,14 @@ RUN <<EOT
   rm python.tar.zst
   rm -rf python
   # Strip debug symbols from shared libraries.
-  strip -d /usr/lib/libpython3.13.so
+  strip -d /usr/lib/libpython${PY_MINOR}.so
   # Remove unneeded packages.
   rm -rf /usr/lib/Tix* /usr/lib/tcl* /usr/lib/tk* /usr/lib/itcl* /usr/lib/thread*
-  rm -rf /usr/lib/libpython3.13.a
-  rm -rf "/usr/lib/python3.13/config-3.13-$(uname -m)-linux-gnu"
-  rm -rf /usr/lib/python3.13/ensurepip
-  rm -rf /usr/lib/python3.13/tkinker
-  rm -rf /usr/lib/python3.13/test
+  rm -rf /usr/lib/libpython${PY_MINOR}.a
+  rm -rf "/usr/lib/python${PY_MINOR}/config-${PY_MINOR}-$(uname -m)-linux-gnu"
+  rm -rf /usr/lib/python${PY_MINOR}/ensurepip
+  rm -rf /usr/lib/python${PY_MINOR}/tkinter
+  rm -rf /usr/lib/python${PY_MINOR}/test
   # Cleanup.
   apt-get remove -y zstd binutils
   apt-get clean

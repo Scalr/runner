@@ -154,10 +154,15 @@ get_latest_scalr_cli() {
         jq -r '.tag_name' | sed 's/^v//'
 }
 
-# Fetch latest Python version (3.13.x series from python-build-standalone)
-get_latest_python() {
-    curl -sL "https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest" | \
-        jq -r '.assets[].name' | grep -oE 'cpython-3\.13\.[0-9]+' | sed 's/cpython-//' | head -1
+# Fetch latest Python version and release from python-build-standalone
+# Returns: "version release" (e.g., "3.13.11 20260114")
+get_latest_python_info() {
+    local release_info
+    release_info=$(curl -sL "https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest")
+    local version release
+    version=$(echo "$release_info" | jq -r '.assets[].name' | grep -oE 'cpython-3\.13\.[0-9]+' | sed 's/cpython-//' | head -1)
+    release=$(echo "$release_info" | jq -r '.tag_name')
+    echo "$version $release"
 }
 
 # Track changes (compatible with bash 3.x)
@@ -243,9 +248,10 @@ else
     log_info "scalr_cli: $CURRENT_SCALR (up to date)"
 fi
 
-# Python
+# Python (version and release)
 CURRENT_PYTHON=$(get_current_version "python")
-LATEST_PYTHON=$(get_latest_python)
+CURRENT_PYTHON_RELEASE=$(get_current_version "python_release")
+read -r LATEST_PYTHON LATEST_PYTHON_RELEASE <<< "$(get_latest_python_info)"
 if [[ -n "$LATEST_PYTHON" && "$CURRENT_PYTHON" != "$LATEST_PYTHON" ]]; then
     log_info "python: $CURRENT_PYTHON -> $LATEST_PYTHON"
     update_version "python" "$LATEST_PYTHON"
@@ -254,6 +260,14 @@ if [[ -n "$LATEST_PYTHON" && "$CURRENT_PYTHON" != "$LATEST_PYTHON" ]]; then
     add_change "python" "$CURRENT_PYTHON" "$LATEST_PYTHON"
 else
     log_info "python: $CURRENT_PYTHON (up to date)"
+fi
+if [[ -n "$LATEST_PYTHON_RELEASE" && "$CURRENT_PYTHON_RELEASE" != "$LATEST_PYTHON_RELEASE" ]]; then
+    log_info "python_release: $CURRENT_PYTHON_RELEASE -> $LATEST_PYTHON_RELEASE"
+    update_version "python_release" "$LATEST_PYTHON_RELEASE"
+    update_readme_version "PYTHON_RELEASE" "$LATEST_PYTHON_RELEASE"
+    add_change "python_release" "$CURRENT_PYTHON_RELEASE" "$LATEST_PYTHON_RELEASE"
+else
+    log_info "python_release: $CURRENT_PYTHON_RELEASE (up to date)"
 fi
 
 # Print summary
