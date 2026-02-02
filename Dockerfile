@@ -146,4 +146,4 @@ EOT
 # Add the scalr user (optional; used when running the container with UID 1000).
 RUN useradd -u 1000 -m scalr
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/usr/bin/bash"]
