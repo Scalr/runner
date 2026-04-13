@@ -32,12 +32,13 @@ jobs:
       - name: Read Versions
         id: versions
         run: |
-          echo "kubectl=$(grep kubectl versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "gcloud=$(grep gcloud versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "aws_cli=$(grep aws_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "azure_cli=$(grep azure_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "scalr_cli=$(grep scalr_cli versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python=$(grep python versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "kubectl=$(grep '^kubectl=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "gcloud=$(grep '^gcloud=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "aws_cli=$(grep '^aws_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "azure_cli=$(grep '^azure_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "scalr_cli=$(grep '^scalr_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "python=$(grep '^python=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          echo "python_release=$(grep '^python_release=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
@@ -49,6 +50,7 @@ jobs:
             AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
             SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
             PYTHON_VERSION=${{ steps.versions.outputs.python }}
+            PYTHON_RELEASE=${{ steps.versions.outputs.python_release }}
           cache-from: type=registry,ref=scalr/runner:buildcache
           cache-to: type=registry,ref=scalr/runner:buildcache
           load: true
@@ -65,3 +67,26 @@ jobs:
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'python --version'
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip --version'
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip install requests'
+
+      - name: Build Docker image (Python 3.9)
+        uses: docker/build-push-action@v6
+        with:
+          build-args: |
+            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
+            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
+            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
+            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
+            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
+            PYTHON_VERSION=3.9.25
+            PYTHON_RELEASE=20251031
+          cache-from: type=registry,ref=scalr/runner:buildcache-python39
+          cache-to: type=registry,ref=scalr/runner:buildcache-python39
+          load: true
+          tags: |
+            scalr/runner:sha-${{ github.sha }}-python39
+
+      - name: Test Docker Image (Python 3.9)
+        run: |
+          docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'python --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'pip --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'pip install requests'

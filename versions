@@ -1,6 +1,7 @@
-kubectl=v1.34.3
-gcloud=549.0.0
-aws_cli=2.32.13
-azure_cli=2.81.0
-scalr_cli=0.17.4
-python=3.14.2
+kubectl=v1.35.3
+gcloud=564.0.0
+aws_cli=2.34.29
+azure_cli=2.85.0
+scalr_cli=0.17.8
+python=3.14.4
+python_release=20260408

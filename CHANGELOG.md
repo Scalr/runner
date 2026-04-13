@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.0](https://github.com/Scalr/runner/tree/0.2.0) (2026-01-19)
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.1.5...0.2.0)
+
+**Merged pull requests:**
+
+- Fix aarch64 python builds [\#9](https://github.com/Scalr/runner/pull/9) ([mermoldy](https://github.com/mermoldy))
+- SCALRCORE-37058 Bump versions and add -python39 build [\#8](https://github.com/Scalr/runner/pull/8) ([mermoldy](https://github.com/mermoldy))
+
+## [0.1.5](https://github.com/Scalr/runner/tree/0.1.5) (2025-12-10)
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.1.4...0.1.5)
+
+**Merged pull requests:**
+
+- SCALRCORE-35910 Add scalr user \(1000:1000\) [\#5](https://github.com/Scalr/runner/pull/5) ([mermoldy](https://github.com/mermoldy))
+
 ## [0.1.4](https://github.com/Scalr/runner/tree/0.1.4) (2025-06-12)
 
 [Full Changelog](https://github.com/Scalr/runner/compare/0.1.3...0.1.4)
