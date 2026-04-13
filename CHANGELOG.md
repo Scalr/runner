@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0](https://github.com/Scalr/runner/tree/0.3.0) (2026-04-13)
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.2.0...0.3.0)
+
+**Merged pull requests:**
+
+- Fix entrypoint path [\#10](https://github.com/Scalr/runner/pull/10) ([mermoldy](https://github.com/mermoldy))
+- SCALRCORE-36689 Bump python and cli-tools to latest versions [\#6](https://github.com/Scalr/runner/pull/6) ([mermoldy](https://github.com/mermoldy))
+
 ## [0.2.0](https://github.com/Scalr/runner/tree/0.2.0) (2026-01-19)
 
 [Full Changelog](https://github.com/Scalr/runner/compare/0.1.5...0.2.0)
