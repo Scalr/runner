@@ -50,7 +50,7 @@ Two Python variants are available:
 ```bash
 docker buildx build \
   --build-arg PYTHON_VERSION=3.14.4 \
-  --build-arg PYTHON_RELEASE=20260114 \
+  --build-arg PYTHON_RELEASE=20260408 \
   --build-arg KUBECTL_VERSION=v1.35.3 \
   --build-arg GCLOUD_VERSION=564.0.0 \
   --build-arg AWS_CLI_VERSION=2.34.29 \
@@ -64,7 +64,7 @@ To build the Python 3.9 variant:
 
 ```bash
 docker buildx build \
-  --build-arg PYTHON_VERSION=3.14.4 \
+  --build-arg PYTHON_VERSION=3.9.25 \
   --build-arg PYTHON_RELEASE=20251031 \
   --build-arg KUBECTL_VERSION=v1.35.3 \
   --build-arg GCLOUD_VERSION=564.0.0 \
