@@ -23,14 +23,14 @@ This environment comes pre-equipped with a comprehensive suite of tools essentia
   * wget - File downloads from the web
   * ca-certificates - Trusted CA certificates
 * **Programming Languages**
-  * Python ([v3.13.11](https://www.python.org/downloads/release/python-31311/)) - General-purpose programming language (release)
+  * Python ([v3.14.4](https://www.python.org/downloads/release/python-3144/)) - General-purpose programming language (release)
   * jq - Command-line JSON processor
 * **Cloud Clients**
-  * AWS CLI ([2.33.2](https://github.com/aws/aws-cli/releases/tag/2.33.2)) - Amazon Web Services CLI.
-  * Azure CLI ([2.82.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.82.0)) - Microsoft Azure CLI.
-  * Google Cloud SDK ([552.0.0](https://cloud.google.com/sdk/docs/release-notes#55200)) - Stable, Alpha, Beta components. Includes kubectl authenticator.
-  * Kubectl ([0.35.0](https://github.com/kubernetes/kubectl/releases/tag/v0.35.0)) - Kubernetes CLI.
-  * Scalr CLI ([0.17.6](https://github.com/Scalr/scalr-cli/releases/tag/v0.17.6)) - The command-line to communicate with the Scalr API.
+  * AWS CLI ([2.34.29](https://github.com/aws/aws-cli/releases/tag/2.34.29)) - Amazon Web Services CLI.
+  * Azure CLI ([2.85.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.85.0)) - Microsoft Azure CLI.
+  * Google Cloud SDK ([564.0.0](https://cloud.google.com/sdk/docs/release-notes#56400)) - Stable, Alpha, Beta components. Includes kubectl authenticator.
+  * Kubectl ([0.35.3](https://github.com/kubernetes/kubectl/releases/tag/v0.35.3)) - Kubernetes CLI.
+  * Scalr CLI ([0.17.8](https://github.com/Scalr/scalr-cli/releases/tag/v0.17.8)) - The command-line to communicate with the Scalr API.
 
 The versions for Python, Cloud Clients, Kubectl, and Scalr CLI are specifically pinned and detailed in the [versions](./versions) file. All other software included in this environment is sourced directly from the Debian Trixie upstream repositories.
 
@@ -42,20 +42,20 @@ Two Python variants are available:
 
 | Image Tag | Python Version |
 |-----------|----------------|
-| `scalr/runner:<x.y.z>` | Python 3.13.x |
+| `scalr/runner:<x.y.z>` | Python 3.14.x |
 | `scalr/runner:<x.y.z>-python39` | Python 3.9.x |
 
 ## Runner Image Building
 
 ```bash
 docker buildx build \
-  --build-arg PYTHON_VERSION=3.13.11 \
-  --build-arg PYTHON_RELEASE=20260114 \
-  --build-arg KUBECTL_VERSION=v1.35.0 \
-  --build-arg GCLOUD_VERSION=552.0.0 \
-  --build-arg AWS_CLI_VERSION=2.33.2 \
-  --build-arg AZURE_CLI_VERSION=2.82.0 \
-  --build-arg SCALR_CLI_VERSION=0.17.6 \
+  --build-arg PYTHON_VERSION=3.14.4 \
+  --build-arg PYTHON_RELEASE=20260408 \
+  --build-arg KUBECTL_VERSION=v1.35.3 \
+  --build-arg GCLOUD_VERSION=564.0.0 \
+  --build-arg AWS_CLI_VERSION=2.34.29 \
+  --build-arg AZURE_CLI_VERSION=2.85.0 \
+  --build-arg SCALR_CLI_VERSION=0.17.8 \
   --platform linux/amd64 \
   -t scalr/runner:latest --load .
 ```
@@ -66,11 +66,11 @@ To build the Python 3.9 variant:
 docker buildx build \
   --build-arg PYTHON_VERSION=3.9.25 \
   --build-arg PYTHON_RELEASE=20251031 \
-  --build-arg KUBECTL_VERSION=v1.35.0 \
-  --build-arg GCLOUD_VERSION=552.0.0 \
-  --build-arg AWS_CLI_VERSION=2.33.2 \
-  --build-arg AZURE_CLI_VERSION=2.82.0 \
-  --build-arg SCALR_CLI_VERSION=0.17.6 \
+  --build-arg KUBECTL_VERSION=v1.35.3 \
+  --build-arg GCLOUD_VERSION=564.0.0 \
+  --build-arg AWS_CLI_VERSION=2.34.29 \
+  --build-arg AZURE_CLI_VERSION=2.85.0 \
+  --build-arg SCALR_CLI_VERSION=0.17.8 \
   --platform linux/amd64 \
   -t scalr/runner:latest-python39 --load .
 ```

@@ -160,7 +160,7 @@ get_latest_python_info() {
     local release_info
     release_info=$(curl -sL "https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest")
     local version release
-    version=$(echo "$release_info" | jq -r '.assets[].name' | grep -oE 'cpython-3\.13\.[0-9]+' | sed 's/cpython-//' | head -1)
+    version=$(echo "$release_info" | jq -r '.assets[].name' | grep -oE 'cpython-3\.14\.[0-9]+' | sed 's/cpython-//' | head -1)
     release=$(echo "$release_info" | jq -r '.tag_name')
     echo "$version $release"
 }
