@@ -3,7 +3,7 @@
 #
 # Note: This is a PUBLIC image, it should not contain any sensitive data.
 
-FROM debian:trixie-slim as base
+FROM debian:trixie-slim
 
 ARG TARGETARCH
 
@@ -145,8 +145,5 @@ EOT
 
 # Add the scalr user (optional; used when running the container with UID 1000).
 RUN useradd -u 1000 -m scalr
-
-FROM scratch
-COPY --from=base / /
 
 ENTRYPOINT ["/usr/bin/bash"]
