@@ -3,7 +3,7 @@
 #
 # Note: This is a PUBLIC image, it should not contain any sensitive data.
 
-FROM debian:trixie-slim
+FROM debian:trixie-slim@sha256:109e2c65005bf160609e4ba6acf7783752f8502ad218e298253428690b9eaa4b
 
 ARG TARGETARCH
 
