@@ -221,6 +221,30 @@ def _latest_python_version(series: str) -> tuple[str, str]:
     return "", ""
 
 
+def get_debian_base_digest(repo: str = "library/debian", tag: str = "trixie-slim") -> str:
+    """Resolve docker.io/<repo>:<tag> to its current manifest digest.
+
+    Uses Docker Hub's anonymous v2 registry API.
+    """
+    token = http_get_json(
+        f"https://auth.docker.io/token?service=registry.docker.io&scope=repository:{repo}:pull"
+    )["token"]
+    req = urllib.request.Request(
+        f"https://registry-1.docker.io/v2/{repo}/manifests/{tag}",
+        method="HEAD",
+        headers={
+            "Authorization": f"Bearer {token}",
+            # Accept both multi-arch index formats — debian:trixie-slim returns the OCI form.
+            "Accept": (
+                "application/vnd.docker.distribution.manifest.list.v2+json,"
+                "application/vnd.oci.image.index.v1+json"
+            ),
+        },
+    )
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return resp.headers["Docker-Content-Digest"]
+
+
 def get_latest_python_info() -> tuple[str, str]:
     """Return (version, release), e.g. ('3.14.5', '20260510')."""
     return _latest_python_version("3.14")
@@ -353,6 +377,13 @@ def main() -> int:
     vs = read_versions()
     changes: list[tuple[str, str, str]] = []
 
+    bump(
+        "debian_base",
+        "DEBIAN_BASE_DIGEST",
+        get_debian_base_digest(),
+        vs.get("DEBIAN_BASE_DIGEST", ""),
+        changes,
+    )
     bump(
         "kubectl",
         "KUBECTL_VERSION",
