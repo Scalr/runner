@@ -47,30 +47,32 @@ Two Python variants are available:
 
 ## Runner Image Building
 
+All tool versions and SHA256 checksums are stored as `KEY=value` lines:
+
+- [`versions`](./versions) — defaults (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin)
+- [`versions_python39`](./versions_python39) — Python 3.9 overrides (consumed only by the `-python39` image)
+
+The snippet below forwards every entry as a `--build-arg`, so each download is
+verified against a hash pinned in this repo.
+
+### Default image (Python 3.14)
+
 ```bash
 docker buildx build \
-  --build-arg PYTHON_VERSION=3.14.5 \
-  --build-arg PYTHON_RELEASE=20260510 \
-  --build-arg KUBECTL_VERSION=v1.36.1 \
-  --build-arg GCLOUD_VERSION=568.0.0 \
-  --build-arg AWS_CLI_VERSION=2.34.45 \
-  --build-arg AZURE_CLI_VERSION=2.86.0 \
-  --build-arg SCALR_CLI_VERSION=0.18.0 \
+  $(grep -v '^#' versions | grep -v '^$' | xargs -I {} echo --build-arg={}) \
   --platform linux/amd64 \
   -t scalr/runner:latest --load .
 ```
 
-To build the Python 3.9 variant:
+### Python 3.9 variant
+
+Pass both files; later args override earlier ones, so `versions_python39`
+replaces the `PYTHON_*` keys from `versions`:
 
 ```bash
 docker buildx build \
-  --build-arg PYTHON_VERSION=3.9.25 \
-  --build-arg PYTHON_RELEASE=20260510 \
-  --build-arg KUBECTL_VERSION=v1.36.1 \
-  --build-arg GCLOUD_VERSION=568.0.0 \
-  --build-arg AWS_CLI_VERSION=2.34.45 \
-  --build-arg AZURE_CLI_VERSION=2.86.0 \
-  --build-arg SCALR_CLI_VERSION=0.18.0 \
+  $(grep -v '^#' versions          | grep -v '^$' | xargs -I {} echo --build-arg={}) \
+  $(grep -v '^#' versions_python39 | grep -v '^$' | xargs -I {} echo --build-arg={}) \
   --platform linux/amd64 \
   -t scalr/runner:latest-python39 --load .
 ```
@@ -80,9 +82,17 @@ docker buildx build \
 To update all tool versions to their latest releases, run:
 
 ```bash
-./bump-versions.sh
+./bump-versions.py
 ```
 
-This script fetches the latest versions from upstream sources and updates the [versions](./versions) file and README.md.
+This script fetches the latest versions from upstream sources and updates the [versions](./versions) and [versions_python39](./versions_python39) files (plus the "Included Tools" section of this README). For every tool it also refreshes the per-arch SHA256 checksums used by the Dockerfile to verify each download.
 
-Requirements: `curl` and `jq`.
+Requirements: `python3` (stdlib only, no `pip install` needed).
+
+GitHub's anonymous API quota is 60 requests/hour. The script makes ~5 calls to
+`api.github.com` per run, so frequent reruns may hit `HTTP 403: rate limit exceeded`.
+Export `GITHUB_TOKEN` (or `GH_TOKEN`) to lift the limit to 5000/hour:
+
+```bash
+GITHUB_TOKEN=$(gh auth token) ./bump-versions.py
+```

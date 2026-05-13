@@ -25,16 +25,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read Versions
-        id: versions
+      - name: Prepare build args
+        id: args
         run: |
-          echo "kubectl=$(grep '^kubectl=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "gcloud=$(grep '^gcloud=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "aws_cli=$(grep '^aws_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "azure_cli=$(grep '^azure_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "scalr_cli=$(grep '^scalr_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python=$(grep '^python=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python_release=$(grep '^python_release=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
+          {
+            echo 'default<<EOF'
+            grep -E '^[A-Z]' versions
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+          # Override block for the python39 variant — appended after defaults
+          # in the build-args input; later entries win in buildx.
+          {
+            echo 'python39<<EOF'
+            grep -E '^[A-Z]' versions_python39
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Format Image Tag
         id: image_tag
@@ -44,14 +49,7 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
-          build-args: |
-            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-            PYTHON_VERSION=${{ steps.versions.outputs.python }}
-            PYTHON_RELEASE=${{ steps.versions.outputs.python_release }}
+          build-args: ${{ steps.args.outputs.default }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=scalr/runner:buildcache
           cache-to: type=registry,ref=scalr/runner:buildcache
@@ -64,13 +62,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           build-args: |
-            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-            PYTHON_VERSION=3.9.25
-            PYTHON_RELEASE=20251031
+            ${{ steps.args.outputs.default }}
+            ${{ steps.args.outputs.python39 }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=scalr/runner:buildcache-python39
           cache-to: type=registry,ref=scalr/runner:buildcache-python39
