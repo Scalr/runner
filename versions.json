@@ -1,0 +1,45 @@
+{
+  "variable": {
+    "versions_base": {
+      "default": {
+        "DEBIAN_BASE_IMAGE": "debian:trixie-slim",
+        "DEBIAN_BASE_DIGEST": "sha256:b6e2a152f22a40ff69d92cb397223c906017e1391a73c952b588e51af8883bf8"
+      }
+    },
+    "versions_full": {
+      "default": {
+        "KUBECTL_VERSION": "v1.36.1",
+        "KUBECTL_SHA256_AMD64": "629d3f410e09bf49b64ae7079f7f0bda1191efed311f7d37fdbab0ad5b0ec2b7",
+        "KUBECTL_SHA256_ARM64": "59f7ee8e477fae658447607dc3c8790ac17a1b016c01c622c12070e969e2d4e7",
+        "GCLOUD_VERSION": "569.0.0",
+        "GCLOUD_SHA256_AMD64": "d242be22b34ef69b17925cc57022dae8ba8c02393cf7f5954b8fd105201b17e5",
+        "GCLOUD_SHA256_ARM64": "e2ec1a30d714162e7020ad462cba344bd90e24004fe2b53637a57d7ac7715bec",
+        "AWS_CLI_VERSION": "2.34.53",
+        "AWS_CLI_SHA256_AMD64": "b06c9865123cf1bc6f8761a0bf3161630e6f55d84363f9fda89535e2cdbe654b",
+        "AWS_CLI_SHA256_ARM64": "1883e4dddee2ecfab39df0ff0f13b32d50715f7ad9f02a322ecd73ee439cef8f",
+        "AZURE_CLI_VERSION": "2.86.0",
+        "SCALR_CLI_VERSION": "0.18.0",
+        "SCALR_CLI_SHA256_AMD64": "5321bcebd48d30f7c3a936a5c5f10d9d3cfb77ef2974575d4df8e7ee9f890589",
+        "SCALR_CLI_SHA256_ARM64": "8dcada09b5bf10001f4e83190fc9c2a66df692beb07a74b4afe503d2fa75629e",
+        "PYTHON_VERSION": "3.14.5",
+        "PYTHON_RELEASE": "20260510",
+        "PYTHON_SHA256_AMD64": "daa4e5322b2b971011a9455ba813ecdb927ed6832fe87bd3d09162b3dc6fef2c",
+        "PYTHON_SHA256_ARM64": "c70c9c3f35c3fac4e211608409a15dc0c5522e3956e82793f724a6eee64e0ff5",
+        "AWS_SSM_PLUGIN_VERSION": "1.2.814.0",
+        "AWS_SSM_PLUGIN_SHA256_AMD64": "67ddd12b963c28e44126f9732075caae333cc5f55e902623bd6a107ead2bcc56",
+        "AWS_SSM_PLUGIN_SHA256_ARM64": "dd714895b7e9b9945139301311778c175e556f75fda25250d36cff19c5eb0cdf"
+      }
+    },
+    "versions_python39": {
+      "default": {
+        "PYTHON_VERSION": "3.9.25",
+        "PYTHON_RELEASE": "20251031",
+        "PYTHON_SHA256_AMD64": "5afeb1b01609195371a11b2fe6a3e73a315ff6baffd5d3c4ffa2ac3c6245acf5",
+        "PYTHON_SHA256_ARM64": "1ff8edb17b2448883c56ae1046a9c55db604ed52800febe7cd0cdebb7d39fceb",
+        "GCLOUD_VERSION": "564.0.0",
+        "GCLOUD_SHA256_AMD64": "e6e85df426861590178505dde16e1c7c06c806d24a6e2f62b2bdc39f677371c7",
+        "GCLOUD_SHA256_ARM64": "92f7581e434ae44f89d379936e6e7a20f0c9a78439b5834f9b21bde8b3ed8ec6"
+      }
+    }
+  }
+}

@@ -5,6 +5,12 @@ on:
     tags:
       - "*.*.*"
 
+permissions:
+  # Needed by the update_changelog job to git-push CHANGELOG.md back to main.
+  contents: write
+  # Required by google-github-actions/auth for workload identity federation.
+  id-token: write
+
 jobs:
   build:
     name: Build and Push
@@ -19,65 +25,115 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      # Authenticate to Google Artifact Registry (GAR) so the same build can be
+      # mirrored to the internal Scalr registry alongside Docker Hub.
+      - name: Authenticate to Google Cloud
+        id: gcp-auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{vars.GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER}}
+          service_account: ${{vars.GOOGLE_SERVICE_ACCOUNT_EMAIL}}
+          token_format: access_token
+
+      - name: Login to GAR (EU dev)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - name: Login to GAR (US prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read Versions
-        id: versions
-        run: |
-          echo "kubectl=$(grep '^kubectl=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "gcloud=$(grep '^gcloud=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "aws_cli=$(grep '^aws_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "azure_cli=$(grep '^azure_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "scalr_cli=$(grep '^scalr_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python=$(grep '^python=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python_release=$(grep '^python_release=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-
       - name: Format Image Tag
         id: image_tag
         run: |
           echo "tag=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_OUTPUT
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          build-args: |
-            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-            PYTHON_VERSION=${{ steps.versions.outputs.python }}
-            PYTHON_RELEASE=${{ steps.versions.outputs.python_release }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=scalr/runner:buildcache
-          cache-to: type=registry,ref=scalr/runner:buildcache
-          push: true
-          tags: |
-            scalr/runner:latest
-            scalr/runner:${{ steps.image_tag.outputs.tag }}
+      # Two regional GAR mirrors — EU dev and US production.
+      - name: Compose GAR image paths
+        id: gar
+        run: |
+          echo "image_eu=${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.EU_DEV_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
+          echo "image_us=${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.US_PROD_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
 
-      - name: Build Docker image (Python 3.9)
-        uses: docker/build-push-action@v6
+      - name: Build and push images
+        uses: docker/bake-action@v5
+        env:
+          VERSION: ${{ steps.image_tag.outputs.tag }}
         with:
-          build-args: |
-            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-            PYTHON_VERSION=3.9.25
-            PYTHON_RELEASE=20251031
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=scalr/runner:buildcache-python39
-          cache-to: type=registry,ref=scalr/runner:buildcache-python39
+          files: |
+            docker-bake.hcl
+            versions.json
           push: true
-          tags: |
-            scalr/runner:latest-python39
-            scalr/runner:${{ steps.image_tag.outputs.tag }}-python39
+          # Append both GAR region tags to each target so a single push writes
+          # to Docker Hub (declared in docker-bake.hcl) and both regional GAR
+          # mirrors. Cache-to is injected here because the docker-container
+          # driver supports it, while the bake file stays local-driver-friendly.
+          set: |
+            full.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
+            full.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
+            python39.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
+            python39.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
+            slim.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
+            slim.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
+            full.cache-to=type=registry,ref=scalr/runner:buildcache,mode=max
+            python39.cache-to=type=registry,ref=scalr/runner:buildcache-python39,mode=max
+            slim.cache-to=type=registry,ref=scalr/runner:buildcache-slim,mode=max
+
+      - name: Report published images
+        env:
+          TAG: ${{ steps.image_tag.outputs.tag }}
+          IMG_EU: ${{ steps.gar.outputs.image_eu }}
+          IMG_US: ${{ steps.gar.outputs.image_us }}
+        run: |
+          echo "Published runner images for release ${TAG}"
+          echo ""
+          echo "Docker Hub:"
+          echo "  scalr/runner:${TAG}"
+          echo "  scalr/runner:${TAG}-python39"
+          echo "  scalr/runner:${TAG}-slim"
+          echo ""
+          echo "GAR — EU dev:"
+          echo "  ${IMG_EU}:${TAG}"
+          echo "  ${IMG_EU}:${TAG}-python39"
+          echo "  ${IMG_EU}:${TAG}-slim"
+          echo ""
+          echo "GAR — US prod:"
+          echo "  ${IMG_US}:${TAG}"
+          echo "  ${IMG_US}:${TAG}-python39"
+          echo "  ${IMG_US}:${TAG}-slim"
+          {
+            echo "## Published runner images — \`${TAG}\`"
+            echo ""
+            echo "**Docker Hub**"
+            echo ""
+            echo "- \`scalr/runner:${TAG}\`"
+            echo "- \`scalr/runner:${TAG}-python39\`"
+            echo "- \`scalr/runner:${TAG}-slim\`"
+            echo ""
+            echo "**GAR — EU dev**"
+            echo ""
+            echo "- \`${IMG_EU}:${TAG}\`"
+            echo "- \`${IMG_EU}:${TAG}-python39\`"
+            echo "- \`${IMG_EU}:${TAG}-slim\`"
+            echo ""
+            echo "**GAR — US prod**"
+            echo ""
+            echo "- \`${IMG_US}:${TAG}\`"
+            echo "- \`${IMG_US}:${TAG}-python39\`"
+            echo "- \`${IMG_US}:${TAG}-slim\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   update_changelog:
     name: Update Changelog

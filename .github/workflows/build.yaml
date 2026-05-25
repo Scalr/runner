@@ -29,35 +29,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read Versions
-        id: versions
-        run: |
-          echo "kubectl=$(grep '^kubectl=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "gcloud=$(grep '^gcloud=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "aws_cli=$(grep '^aws_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "azure_cli=$(grep '^azure_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "scalr_cli=$(grep '^scalr_cli=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python=$(grep '^python=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-          echo "python_release=$(grep '^python_release=' versions | cut -d= -f2)" | tee -a $GITHUB_OUTPUT
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
+      # Build all variants single-arch so they can be loaded locally and smoke-tested.
+      - name: Build images
+        uses: docker/bake-action@v5
         with:
-          build-args: |
-            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-            PYTHON_VERSION=${{ steps.versions.outputs.python }}
-            PYTHON_RELEASE=${{ steps.versions.outputs.python_release }}
-          cache-from: type=registry,ref=scalr/runner:buildcache
-          cache-to: type=registry,ref=scalr/runner:buildcache
+          files: |
+            docker-bake.hcl
+            versions.json
           load: true
-          tags: |
-            scalr/runner:sha-${{ github.sha }}
+          set: |
+            *.platform=linux/amd64
+            full.tags=scalr/runner:sha-${{ github.sha }}
+            python39.tags=scalr/runner:sha-${{ github.sha }}-python39
+            slim.tags=scalr/runner:sha-${{ github.sha }}-slim
+            full.cache-to=type=registry,ref=scalr/runner:buildcache,mode=max
+            python39.cache-to=type=registry,ref=scalr/runner:buildcache-python39,mode=max
+            slim.cache-to=type=registry,ref=scalr/runner:buildcache-slim,mode=max
 
-      - name: Test Docker Image
+      - name: Test full image
         run: |
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'gcloud version'
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'aws --version'
@@ -68,25 +57,17 @@ jobs:
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip --version'
           docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip install requests'
 
-      - name: Build Docker image (Python 3.9)
-        uses: docker/build-push-action@v6
-        with:
-          build-args: |
-            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl }}
-            GCLOUD_VERSION=${{ steps.versions.outputs.gcloud }}
-            AWS_CLI_VERSION=${{ steps.versions.outputs.aws_cli }}
-            AZURE_CLI_VERSION=${{ steps.versions.outputs.azure_cli }}
-            SCALR_CLI_VERSION=${{ steps.versions.outputs.scalr_cli }}
-            PYTHON_VERSION=3.9.25
-            PYTHON_RELEASE=20251031
-          cache-from: type=registry,ref=scalr/runner:buildcache-python39
-          cache-to: type=registry,ref=scalr/runner:buildcache-python39
-          load: true
-          tags: |
-            scalr/runner:sha-${{ github.sha }}-python39
-
-      - name: Test Docker Image (Python 3.9)
+      - name: Test python39 image
         run: |
           docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'python --version'
           docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'pip --version'
           docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'pip install requests'
+
+      - name: Test slim image
+        run: |
+          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc 'git --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc 'curl --version'
+          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc 'jq --version'
+          # Confirm python and cloud tools are absent.
+          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc '! command -v python'
+          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc '! command -v aws'
