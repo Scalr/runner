@@ -85,12 +85,6 @@ Same as the full image, with Python 3.14 replaced by Python 3.9 (currently
 A non-root user `scalr` with uid/gid `1000` is created in the base layer
 and is therefore present in all variants.
 
-### Security hardening
-
-`su`/`sudo`, account/password tools (`passwd`, `chsh`, `chage`,
-`useradd`/`usermod`/`groupadd`/…), `mount`/`umount`, and all SUID/SGID bits
-are stripped at the end of every image build. This applies to all variants.
-
 ## Building the Image
 
 Builds are driven by [`docker-bake.hcl`](./docker-bake.hcl) (targets, tags,
