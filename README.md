@@ -19,8 +19,8 @@ on-prem Scalr Agents.
 
 Three variants are published from this repository:
 
-- `scalr/runner:<x.y.z>-slim` — minimal set of useful tools.
-- `scalr/runner:<x.y.z>` — same as `-slim`, plus a full set of cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
+- `scalr/runner:<x.y.z>-slim` — slim image: a minimal set of tools.
+- `scalr/runner:<x.y.z>` — full image: the slim set plus cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
 - `scalr/runner:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.14 (for legacy workflows).
 
 Images are based on
