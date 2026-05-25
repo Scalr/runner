@@ -5,6 +5,12 @@ on:
     tags:
       - "*.*.*"
 
+permissions:
+  # Needed by the update_changelog job to git-push CHANGELOG.md back to main.
+  contents: write
+  # Required by google-github-actions/auth for workload identity federation.
+  id-token: write
+
 jobs:
   build:
     name: Build and Push
@@ -19,6 +25,20 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      # Authenticate to Google Artifact Registry (GAR) so the same build can be
+      # mirrored to the internal Scalr registry alongside Docker Hub.
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{vars.GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER}}
+          service_account: ${{vars.GOOGLE_SERVICE_ACCOUNT_EMAIL}}
+          token_format: access_token
+
+      - name: Configure Docker for GAR
+        run: |
+          gcloud auth configure-docker ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev --quiet
+          gcloud auth configure-docker ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev --quiet
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -30,6 +50,13 @@ jobs:
         run: |
           echo "tag=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_OUTPUT
 
+      # Two regional GAR mirrors — EU dev and US production.
+      - name: Compose GAR image paths
+        id: gar
+        run: |
+          echo "image_eu=${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.EU_DEV_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
+          echo "image_us=${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.US_PROD_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
+
       - name: Build and push images
         uses: docker/bake-action@v5
         env:
@@ -39,7 +66,17 @@ jobs:
             docker-bake.hcl
             versions.json
           push: true
+          # Append both GAR region tags to each target so a single push writes
+          # to Docker Hub (declared in docker-bake.hcl) and both regional GAR
+          # mirrors. Cache-to is injected here because the docker-container
+          # driver supports it, while the bake file stays local-driver-friendly.
           set: |
+            full.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
+            full.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
+            python39.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
+            python39.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
+            slim.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
+            slim.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
             full.cache-to=type=registry,ref=scalr/runner:buildcache,mode=max
             python39.cache-to=type=registry,ref=scalr/runner:buildcache-python39,mode=max
             slim.cache-to=type=registry,ref=scalr/runner:buildcache-slim,mode=max

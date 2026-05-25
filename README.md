@@ -11,7 +11,6 @@ remote operations backend of the Scalr platform and [on-prem Scalr Agents](https
   - [Added in the full image](#added-in-the-full-image)
   - [Added in the `-python39` image](#added-in-the--python39-image)
   - [Runtime user](#runtime-user)
-  - [Security hardening](#security-hardening)
 - [Building the Image](#building-the-image)
 - [Bumping Versions](#bumping-versions)
 
