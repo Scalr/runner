@@ -46,12 +46,12 @@ jobs:
           service_account: ${{vars.GOOGLE_SERVICE_ACCOUNT_EMAIL}}
           token_format: access_token
 
-      - name: Login to GAR (EU dev)
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.gcp-auth.outputs.access_token }}
+      # - name: Login to GAR (EU dev)
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev
+      #     username: oauth2accesstoken
+      #     password: ${{ steps.gcp-auth.outputs.access_token }}
 
       - name: Login to GAR (US prod)
         uses: docker/login-action@v3
