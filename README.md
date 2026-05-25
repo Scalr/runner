@@ -117,21 +117,21 @@ and `--load` to every local command.
 ### Build everything
 
 ```bash
-VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
+VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
   --set "*.platform=linux/amd64" --load
 ```
 
 ### Build one variant
 
 ```bash
-VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load full      # scalr/runner:3.0.0
+VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load full      # scalr/runner:dev
 
-VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load python39  # scalr/runner:3.0.0-python39
+VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load python39  # scalr/runner:dev-python39
 
-VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load slim      # scalr/runner:3.0.0-slim
+VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load slim      # scalr/runner:dev-slim
 ```
 
 ## Bumping Versions
