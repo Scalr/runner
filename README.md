@@ -30,9 +30,8 @@ Images are based on
 
 ## Included Tools
 
-Tools are grouped by which image variant they appear in. The base set is
-present in every variant; the full / `-python39` sections only describe what's
-added on top.
+The images provide a set of tools commonly used in IaC workflows, grouped
+below by the variant they appear in.
 
 ### Base Software
 
