@@ -26,9 +26,9 @@ This environment comes pre-equipped with a comprehensive suite of tools essentia
   * Python ([v3.14.5](https://www.python.org/downloads/release/python-3145/)) - General-purpose programming language (release)
   * jq - Command-line JSON processor
 * **Cloud Clients**
-  * AWS CLI ([2.34.45](https://github.com/aws/aws-cli/releases/tag/2.34.45)) - Amazon Web Services CLI.
+  * AWS CLI ([2.34.53](https://github.com/aws/aws-cli/releases/tag/2.34.53)) - Amazon Web Services CLI.
   * Azure CLI ([2.86.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.86.0)) - Microsoft Azure CLI.
-  * Google Cloud SDK ([568.0.0](https://cloud.google.com/sdk/docs/release-notes#56800)) - Stable, Alpha, Beta components. Includes kubectl authenticator.
+  * Google Cloud SDK ([569.0.0](https://cloud.google.com/sdk/docs/release-notes#56900)) - Stable, Alpha, Beta components. Includes kubectl authenticator.
   * Kubectl ([0.36.1](https://github.com/kubernetes/kubectl/releases/tag/v0.36.1)) - Kubernetes CLI.
   * Scalr CLI ([0.18.0](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.0)) - The command-line to communicate with the Scalr API.
 
