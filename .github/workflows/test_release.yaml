@@ -1,0 +1,144 @@
+name: Test Release Pipeline
+
+# PR-triggered mirror of release.yaml — used to exercise the release pipeline
+# end-to-end without actually publishing a release. Runs only when the PR
+# carries the `test` label; rebuilds on every push to that PR while the label
+# is applied.
+#
+# Differences from release.yaml:
+#   - Triggered by `test` label on a PR, not by a semver tag push.
+#   - Image tag is derived from the PR branch (prefixed `test-`) so it cannot
+#     collide with real release tags.
+#   - Docker Hub login + push is commented out (temporary) — pushes only to
+#     the internal GAR mirrors.
+#   - No update_changelog job.
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+  # Required by google-github-actions/auth for workload identity federation.
+  id-token: write
+
+jobs:
+  build:
+    name: Build and Push (test)
+    if: contains(github.event.pull_request.labels.*.name, 'test')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Docker Hub login temporarily disabled — see workflow header.
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ vars.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Authenticate to Google Cloud
+        id: gcp-auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{vars.GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER}}
+          service_account: ${{vars.GOOGLE_SERVICE_ACCOUNT_EMAIL}}
+          token_format: access_token
+
+      - name: Login to GAR (EU dev)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - name: Login to GAR (US prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # PR source branch → Docker tag. Lower-cased, slashes → dashes, and
+      # prefixed `test-` so the tag cannot collide with a semver release tag
+      # pushed by release.yaml.
+      - name: Format Image Tag
+        id: image_tag
+        run: |
+          raw='${{ github.head_ref }}'
+          sanitized="${raw,,}"
+          sanitized="${sanitized//\//-}"
+          echo "tag=test-${sanitized}" | tee -a $GITHUB_OUTPUT
+
+      # Two regional GAR mirrors — EU dev and US production.
+      - name: Compose GAR image paths
+        id: gar
+        run: |
+          echo "image_eu=${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.EU_DEV_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
+          echo "image_us=${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.US_PROD_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
+
+      - name: Build and push images
+        uses: docker/bake-action@v5
+        env:
+          VERSION: ${{ steps.image_tag.outputs.tag }}
+        with:
+          files: |
+            docker-bake.hcl
+            versions.json
+          push: true
+          # Replace each target's tag list (`tags=` removes the Docker Hub
+          # default from docker-bake.hcl since DH login is disabled) so the
+          # build pushes only to the two GAR mirrors.
+          set: |
+            full.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
+            full.tags=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
+            python39.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
+            python39.tags=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
+            slim.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
+            slim.tags=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
+            full.cache-from=type=gha,scope=full
+            full.cache-to=type=gha,scope=full,mode=max
+            python39.cache-from=type=gha,scope=python39
+            python39.cache-to=type=gha,scope=python39,mode=max
+            slim.cache-from=type=gha,scope=slim
+            slim.cache-to=type=gha,scope=slim,mode=max
+
+      - name: Report published images
+        env:
+          TAG: ${{ steps.image_tag.outputs.tag }}
+          IMG_EU: ${{ steps.gar.outputs.image_eu }}
+          IMG_US: ${{ steps.gar.outputs.image_us }}
+        run: |
+          echo "Published test runner images for tag ${TAG}"
+          echo ""
+          echo "GAR — EU dev:"
+          echo "  ${IMG_EU}:${TAG}"
+          echo "  ${IMG_EU}:${TAG}-python39"
+          echo "  ${IMG_EU}:${TAG}-slim"
+          echo ""
+          echo "GAR — US prod:"
+          echo "  ${IMG_US}:${TAG}"
+          echo "  ${IMG_US}:${TAG}-python39"
+          echo "  ${IMG_US}:${TAG}-slim"
+          {
+            echo "## Published test runner images — \`${TAG}\`"
+            echo ""
+            echo "**GAR — EU dev**"
+            echo ""
+            echo "- \`${IMG_EU}:${TAG}\`"
+            echo "- \`${IMG_EU}:${TAG}-python39\`"
+            echo "- \`${IMG_EU}:${TAG}-slim\`"
+            echo ""
+            echo "**GAR — US prod**"
+            echo ""
+            echo "- \`${IMG_US}:${TAG}\`"
+            echo "- \`${IMG_US}:${TAG}-python39\`"
+            echo "- \`${IMG_US}:${TAG}-slim\`"
+          } >> "$GITHUB_STEP_SUMMARY"
