@@ -1,7 +1,7 @@
 # Scalr Runner Image
 
 This repository hosts the build pipeline for the runner images used by the OpenTofu/Terraform 
-remote backend of the Scalr platform and on-prem Scalr Agents.
+remote operations backend of the Scalr platform and [on-prem Scalr Agents](https://docs.scalr.io/docs/run-environment#runner-image).
 
 ## Contents
 
