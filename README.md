@@ -1,7 +1,7 @@
-# Runner Image used in Scalr Remote Backend
+# Scalr Runner Image
 
-This repository builds the runner images used by the Scalr platform and
-on-prem Scalr Agents.
+This repository hosts the build pipeline for the runner images used by the
+remote backend of the Scalr platform and on-prem Scalr Agents.
 
 ## Contents
 
