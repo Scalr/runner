@@ -1,4 +1,4 @@
-name: Build and Release Runner Image (GAR only)
+name: Build and Release Runner Image (EU dev GAR)
 
 # Triggered when a PR carries the `build-gar-images` label. Pushes test
 # builds of all three variants to the EU dev GAR mirror only — Docker
@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and Push to GAR
+    name: Build and Push to GAR (EU dev)
     if: contains(github.event.pull_request.labels.*.name, 'build-gar-images')
     runs-on: ubuntu-latest
     steps:

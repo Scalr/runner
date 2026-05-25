@@ -116,14 +116,17 @@ VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
 ### Build one variant
 
 ```bash
+# scalr/runner:dev
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load full      # scalr/runner:dev
+  --set "*.platform=linux/amd64" --load full
 
+# scalr/runner:dev-python39
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load python39  # scalr/runner:dev-python39
+  --set "*.platform=linux/amd64" --load python39
 
+# scalr/runner:dev-slim
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load slim      # scalr/runner:dev-slim
+  --set "*.platform=linux/amd64" --load slim
 ```
 
 ## Bumping Versions
