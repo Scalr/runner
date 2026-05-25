@@ -78,8 +78,8 @@ jobs:
           push: true
           # Append both GAR region tags to each target so a single push writes
           # to Docker Hub (declared in docker-bake.hcl) and both regional GAR
-          # mirrors. Cache-to is injected here because the docker-container
-          # driver supports it, while the bake file stays local-driver-friendly.
+          # mirrors. Cache uses GitHub Actions cache (per-repo, private) so
+          # nothing cache-related leaks into the public Docker Hub repo.
           set: |
             full.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
             full.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
@@ -87,9 +87,12 @@ jobs:
             python39.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
             slim.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
             slim.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
-            full.cache-to=type=registry,ref=scalr/runner:buildcache,mode=max
-            python39.cache-to=type=registry,ref=scalr/runner:buildcache-python39,mode=max
-            slim.cache-to=type=registry,ref=scalr/runner:buildcache-slim,mode=max
+            full.cache-from=type=gha,scope=full
+            full.cache-to=type=gha,scope=full,mode=max
+            python39.cache-from=type=gha,scope=python39
+            python39.cache-to=type=gha,scope=python39,mode=max
+            slim.cache-from=type=gha,scope=slim
+            slim.cache-to=type=gha,scope=slim,mode=max
 
       - name: Report published images
         env:
