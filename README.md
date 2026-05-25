@@ -1,10 +1,7 @@
 # Runner Image used in Scalr Remote Backend
 
 This repository builds the runner images used by the Scalr platform and
-on-prem Scalr Agents. Images are based on
-[`debian:trixie-slim`](https://hub.docker.com/_/debian) (pinned by digest in
-[versions.json](./versions.json)) and published as multi-arch manifests for
-`linux/amd64` and `linux/arm64`.
+on-prem Scalr Agents.
 
 ## Contents
 
@@ -25,6 +22,11 @@ Three variants are published from this repository:
 - `scalr/runner:<x.y.z>-slim` — minimal set of useful tools.
 - `scalr/runner:<x.y.z>` — same as `-slim`, plus a full set of cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
 - `scalr/runner:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.14 (for legacy workflows).
+
+Images are based on
+[`debian:trixie-slim`](https://hub.docker.com/_/debian) (pinned by digest in
+[versions.json](./versions.json)) and published as multi-arch manifests for
+`linux/amd64` and `linux/arm64`.
 
 ## Included Tools
 
