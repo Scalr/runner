@@ -37,14 +37,19 @@ jobs:
             docker-bake.hcl
             versions.json
           load: true
+          # Use GitHub Actions cache (type=gha) — scoped per target, lives in
+          # GitHub's per-repo cache backend, not the public Docker Hub repo.
           set: |
             *.platform=linux/amd64
             full.tags=scalr/runner:sha-${{ github.sha }}
             python39.tags=scalr/runner:sha-${{ github.sha }}-python39
             slim.tags=scalr/runner:sha-${{ github.sha }}-slim
-            full.cache-to=type=registry,ref=scalr/runner:buildcache,mode=max
-            python39.cache-to=type=registry,ref=scalr/runner:buildcache-python39,mode=max
-            slim.cache-to=type=registry,ref=scalr/runner:buildcache-slim,mode=max
+            full.cache-from=type=gha,scope=full
+            full.cache-to=type=gha,scope=full,mode=max
+            python39.cache-from=type=gha,scope=python39
+            python39.cache-to=type=gha,scope=python39,mode=max
+            slim.cache-from=type=gha,scope=slim
+            slim.cache-to=type=gha,scope=slim,mode=max
 
       - name: Test full image
         run: |
