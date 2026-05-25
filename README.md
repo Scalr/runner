@@ -83,8 +83,7 @@ Same as the full image, with Python 3.14 replaced by Python 3.9 (currently
 ### Runtime user
 
 A non-root user `scalr` with uid/gid `1000` is created in the base layer
-and is therefore present in all variants. Use it by running the container
-with `--user 1000`.
+and is therefore present in all variants.
 
 ### Security hardening
 
