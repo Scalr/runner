@@ -40,6 +40,10 @@ RUN <<EOT
   find /usr -name __pycache__ -type d -exec rm -rf {} +
 EOT
 
+# Non-root user available in every variant (optional; used when the container
+# runs with --user 1000). Created before hardening removes useradd.
+RUN useradd -u 1000 -m scalr
+
 
 # ----------------------------------------------------------------------------
 # slim: base + security hardening (final image)
@@ -219,9 +223,6 @@ RUN <<EOT
   # Cleanup
   rm -rf scalr_cli.zip
 EOT
-
-# Add the scalr user (optional; used when running the container with UID 1000).
-RUN useradd -u 1000 -m scalr
 
 # Security hardening: strip privilege-escalation surface inherited from the base image.
 # Must run last so it cannot be undone by a later layer.

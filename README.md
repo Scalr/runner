@@ -1,69 +1,112 @@
 # Runner Image used in Scalr Remote Backend
 
-This is the Git repo of the official runner image.
+This repository builds the runner images used by the Scalr platform and
+on-prem Scalr Agents. Images are based on
+[`debian:trixie-slim`](https://hub.docker.com/_/debian) (pinned by digest in
+[versions.json](./versions.json)) and published as multi-arch manifests for
+`linux/amd64` and `linux/arm64`.
 
-The image is based on the [`debian:trixie-slim`](https://hub.docker.com/_/debian).
+## Contents
 
-## Included Tools
-
-This environment comes pre-equipped with a comprehensive suite of tools essential for development, operations, and cloud interactions. Here's a breakdown of what's included (full image; the `-slim` variant ships only the basic tools through `jq`):
-
-* **Archivators**:
-  * zip - Create and extract ZIP archives
-  * tar - Manipulate tar archives
-  * gzip - Compress and decompress `.gz` files
-* **Encryption**:
-  * gnupg - Secure data encryption and signing
-* **Git**:
-  * Core Git functionality
-  * Git LFS (Large File Storage)
-  * SSH and HTTP transport protocols
-* **HTTP Clients**:
-  * curl - Data transfer with URLs
-  * wget - File downloads from the web
-  * ca-certificates - Trusted CA certificates
-* **Programming Languages**
-  * Python ([v3.14.5](https://www.python.org/downloads/release/python-3145/)) - General-purpose programming language (release)
-  * jq - Command-line JSON processor
-* **Cloud Clients**
-  * AWS CLI ([2.34.53](https://github.com/aws/aws-cli/releases/tag/2.34.53)) - Amazon Web Services CLI.
-  * Azure CLI ([2.86.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.86.0)) - Microsoft Azure CLI.
-  * Google Cloud SDK ([569.0.0](https://cloud.google.com/sdk/docs/release-notes#56900)) - Stable, Alpha, Beta components. Includes kubectl authenticator.
-  * Kubectl ([0.36.1](https://github.com/kubernetes/kubectl/releases/tag/v0.36.1)) - Kubernetes CLI.
-  * Scalr CLI ([0.18.0](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.0)) - The command-line to communicate with the Scalr API.
-
-The versions for Python, Cloud Clients, Kubectl, and Scalr CLI are specifically pinned and detailed in [versions.json](./versions.json). All other software included in this environment is sourced directly from the Debian Trixie upstream repositories.
+- [Image Variants](#image-variants)
+- [Included Tools](#included-tools)
+  - [Base Software](#base-software)
+  - [Added in the full image](#added-in-the-full-image)
+  - [Added in the `-python39` image](#added-in-the--python39-image)
+  - [Runtime user](#runtime-user)
+  - [Security hardening](#security-hardening)
+- [Building the Image](#building-the-image)
+- [Bumping Versions](#bumping-versions)
 
 ## Image Variants
 
-| Image Tag | Contents | Python Version |
-|-----------|----------|----------------|
-| `scalr/runner:<x.y.z>` | Basic tools + Python + cloud CLIs | Python 3.14.x |
-| `scalr/runner:<x.y.z>-python39` | Same as default, with Python 3.9 | Python 3.9.x |
-| `scalr/runner:<x.y.z>-slim` | Basic tools only (git, curl, jq, gnupg, etc.) | — |
+Three variants are published from this repository:
 
-The `-slim` variant is for workflows that don't need Python or cloud CLIs and
-want the smallest possible image.
+- `scalr/runner:<x.y.z>-slim` — minimal set of useful tools.
+- `scalr/runner:<x.y.z>` — same as `-slim`, plus a full set of cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
+- `scalr/runner:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.14 (for legacy workflows).
 
-### Python Distribution (default and `-python39`)
+## Included Tools
 
-The Python-enabled images use the [standalone Python build](https://github.com/astral-sh/python-build-standalone) provided by the [astral.sh](https://astral.sh/) team.
+Tools are grouped by which image variant they appear in. The base set is
+present in every variant; the full / `-python39` sections only describe what's
+added on top.
 
-## Runner Image Building
+### Base Software
+
+Present in all variants. These come from the pinned Debian Trixie snapshot
+referenced by `DEBIAN_BASE_DIGEST` in [versions.json](./versions.json), so
+their exact versions are whatever that snapshot pins.
+
+* **Archive tools**:
+  * `tar` — manipulate tar archives (from the base image)
+  * `gzip` — compress and decompress `.gz` files (from the base image)
+  * `zip`, `unzip` — create and extract ZIP archives
+* **Encryption**:
+  * `gnupg` — secure data encryption and signing
+* **Git**:
+  * `git-core` — core Git
+  * `git-lfs` — Large File Storage extension
+  * `openssh-client` — SSH transport for Git over SSH
+* **HTTP / network**:
+  * `curl` — data transfer with URLs
+  * `wget` — file downloads from the web
+  * `ca-certificates` — trusted CA bundle
+* **System / misc**:
+  * `jq` — command-line JSON processor
+  * `lsb-release` — Linux Standard Base release info
+  * `bash` (default shell / entrypoint)
+
+### Added in the full image
+
+These are pinned by exact version + SHA256 in
+[versions.json](./versions.json) and downloaded during the build. The
+versions below are the current pins (kept in sync with `versions.json` by
+`bump-versions.py`):
+
+* **Programming language**
+  * Python ([v3.14.5](https://www.python.org/downloads/release/python-3145/)) — [standalone CPython build](https://github.com/astral-sh/python-build-standalone) from [astral.sh](https://astral.sh/)
+* **Cloud CLIs**
+  * AWS CLI ([2.34.53](https://github.com/aws/aws-cli/releases/tag/2.34.53)) — Amazon Web Services CLI
+  * AWS Session Manager Plugin — SSM session support for the AWS CLI
+  * Azure CLI ([2.86.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.86.0)) — Microsoft Azure CLI
+  * Google Cloud SDK ([569.0.0](https://cloud.google.com/sdk/docs/release-notes#56900)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
+  * Kubectl ([0.36.1](https://github.com/kubernetes/kubectl/releases/tag/v0.36.1)) — Kubernetes CLI
+  * Scalr CLI ([0.18.0](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.0)) — command-line client for the Scalr API
+
+### Added in the `-python39` image
+
+Same as the full image, with Python 3.14 replaced by Python 3.9 (currently
+[v3.9.25](https://www.python.org/downloads/release/python-3925/)).
+
+### Runtime user
+
+A non-root user `scalr` with uid/gid `1000` is created in the base layer
+and is therefore present in all variants. Use it by running the container
+with `--user 1000`.
+
+### Security hardening
+
+`su`/`sudo`, account/password tools (`passwd`, `chsh`, `chage`,
+`useradd`/`usermod`/`groupadd`/…), `mount`/`umount`, and all SUID/SGID bits
+are stripped at the end of every image build. This applies to all variants.
+
+## Building the Image
 
 Builds are driven by [`docker-bake.hcl`](./docker-bake.hcl) (targets, tags,
-cache config) and [`versions.json`](./versions.json) (pinned tool versions and
-SHA256 checksums). `versions.json` is a native Docker Buildx Bake variable
-file containing two maps:
+cache config) and [`versions.json`](./versions.json) (pinned tool versions
+and SHA256 checksums). `versions.json` is a native Docker Buildx Bake
+variable file containing three maps:
 
 - `versions_base` — Debian base image and digest (used by every target, including `-slim`)
 - `versions_full` — extra tools layered on top for the full image (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin)
 - `versions_python39` — Python 3.9 overrides merged on top of `versions_full` for the `-python39` image
 
-Always pass both files. Every download is verified by SHA256 in the Dockerfile.
+Always pass both files. Every download is verified by SHA256 in the
+Dockerfile.
 
-Tags use `VERSION` from the environment, defaulting to `dev` for local builds.
-There is no `latest` tag — release tags are explicit.
+Tags use `VERSION` from the environment, defaulting to `dev` for local
+builds.
 
 The bake file declares `platforms = ["linux/amd64", "linux/arm64"]` for CI
 multi-arch builds. Local builds with Docker's default driver cannot do
@@ -98,13 +141,18 @@ To update all tool versions to their latest releases, run:
 ./bump-versions.py
 ```
 
-This script fetches the latest versions from upstream sources and updates the `versions_base`, `versions_full`, and `versions_python39` maps in [versions.json](./versions.json) (plus the "Included Tools" section of this README). For every tool it also refreshes the per-arch SHA256 checksums used by the Dockerfile to verify each download.
+This script fetches the latest versions from upstream sources and updates
+the `versions_base`, `versions_full`, and `versions_python39` maps in
+[versions.json](./versions.json) (plus the [Included Tools](#included-tools)
+section of this README). For every tool it also refreshes the per-arch
+SHA256 checksums used by the Dockerfile to verify each download.
 
 Requirements: `python3` (stdlib only, no `pip install` needed).
 
-GitHub's anonymous API quota is 60 requests/hour. The script makes ~5 calls to
-`api.github.com` per run, so frequent reruns may hit `HTTP 403: rate limit exceeded`.
-Export `GITHUB_TOKEN` (or `GH_TOKEN`) to lift the limit to 5000/hour:
+GitHub's anonymous API quota is 60 requests/hour. The script makes ~5 calls
+to `api.github.com` per run, so frequent reruns may hit `HTTP 403: rate
+limit exceeded`. Export `GITHUB_TOKEN` (or `GH_TOKEN`) to lift the limit to
+5000/hour:
 
 ```bash
 GITHUB_TOKEN=$(gh auth token) ./bump-versions.py
