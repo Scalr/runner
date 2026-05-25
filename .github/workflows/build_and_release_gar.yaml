@@ -109,24 +109,23 @@ jobs:
             python39.cache-to=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}-python39,mode=max
             slim.cache-to=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}-slim,mode=max
 
-      - name: Summary
+      - name: Report published images
         env:
           BRANCH: ${{ github.head_ref }}
           TAG: ${{ steps.branch.outputs.tag }}
           IMG: ${{ steps.gar.outputs.image }}
         run: |
-          refs=(
-            "${IMG}:${TAG}"
-            "${IMG}:${TAG}-python39"
-            "${IMG}:${TAG}-slim"
-          )
-          echo "::group::Published: GAR — EU dev (branch ${BRANCH})"
-          for ref in "${refs[@]}"; do echo "  - ${ref}"; done
-          echo "::endgroup::"
+          echo "Published GAR (EU dev) images for branch ${BRANCH}"
+          echo ""
+          echo "  ${IMG}:${TAG}"
+          echo "  ${IMG}:${TAG}-python39"
+          echo "  ${IMG}:${TAG}-slim"
           {
             echo "## Published runner images — branch \`${BRANCH}\`"
             echo ""
             echo "**GAR — EU dev**"
             echo ""
-            for ref in "${refs[@]}"; do echo "- \`${ref}\`"; done
+            echo "- \`${IMG}:${TAG}\`"
+            echo "- \`${IMG}:${TAG}-python39\`"
+            echo "- \`${IMG}:${TAG}-slim\`"
           } >> "$GITHUB_STEP_SUMMARY"
