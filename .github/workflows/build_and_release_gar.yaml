@@ -26,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
+        id: gcp-auth
         uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{vars.GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER}}
@@ -34,8 +35,8 @@ jobs:
 
       - name: Configure Docker for GAR
         run: |
-          gcloud auth configure-docker ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev --quiet
           gcloud auth configure-docker ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev --quiet
+          gcloud auth configure-docker ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev --quiet
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
