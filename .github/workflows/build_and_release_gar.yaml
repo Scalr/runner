@@ -1,11 +1,15 @@
 name: Build and Release Runner Image (GAR only)
 
 # Triggered when a PR carries the `build-gar-images` label. Pushes test
-# builds of all three variants to the internal GAR mirror only — Docker
-# Hub is not touched. Each new push to the PR rebuilds while the label
-# is applied. Images are tagged by branch name (lower-cased) so
-# collaborators can pull a stable reference (e.g. scalr/runner:my-branch).
-# Each image is pushed to two regional GAR repos: europe-west4 and us-central1.
+# builds of all three variants to the EU dev GAR mirror only — Docker
+# Hub and the US production mirror are never touched here (production
+# is reserved for the release.yaml workflow).
+#
+# Tags are derived from the PR source branch, lower-cased and prefixed
+# with `branch-` so they cannot collide with the semver release tags
+# produced by release.yaml. Example: branch `0.2.0` → `branch-0.2.0`,
+# not `0.2.0`. This prevents a PR from a maliciously-named branch from
+# overwriting an existing release image.
 
 on:
   pull_request:
@@ -25,6 +29,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Defense-in-depth: refuse to build on behalf of senders without
+      # write-or-better access on this repo. Covers two paths:
+      #   - `labeled` event: the user who added the label must be trusted.
+      #   - `synchronize` event: the user who pushed must be trusted.
+      # GitHub already strips secrets/vars for `pull_request` runs from
+      # forks, so this is layered on top of that built-in protection.
+      - name: Verify sender authorization
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.event.sender.login }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          role=$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" --jq .permission)
+          case "$role" in
+            admin|maintain|write) echo "OK: ${ACTOR} has ${role} on ${REPO}";;
+            *) echo "::error::Sender ${ACTOR} has '${role}' permission; needs write or higher"; exit 1;;
+          esac
+
       - name: Authenticate to Google Cloud
         id: gcp-auth
         uses: google-github-actions/auth@v3
@@ -33,10 +56,12 @@ jobs:
           service_account: ${{vars.GOOGLE_SERVICE_ACCOUNT_EMAIL}}
           token_format: access_token
 
-      - name: Configure Docker for GAR
-        run: |
-          gcloud auth configure-docker ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev --quiet
-          gcloud auth configure-docker ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev --quiet
+      - name: Login to GAR (EU dev)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -44,23 +69,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # PR source branch, lower-cased and sanitized for use as a Docker tag
-      # (Docker tags are case-sensitive but downstream agents lower-case
-      # image refs; slashes are illegal and become dashes).
+      # PR source branch → Docker tag. Lower-cased (downstream agents
+      # lower-case image refs), slashes → dashes (illegal in tags), and
+      # prefixed with `branch-` so the tag can never collide with a
+      # semver release tag pushed by release.yaml.
       - name: Resolve branch tag
         id: branch
         run: |
           raw='${{ github.head_ref }}'
           sanitized="${raw,,}"
           sanitized="${sanitized//\//-}"
-          echo "tag=${sanitized}" | tee -a $GITHUB_OUTPUT
+          echo "tag=branch-${sanitized}" | tee -a $GITHUB_OUTPUT
 
-      # Two regional GAR mirrors — EU dev and US production.
-      - name: Compose GAR image paths
+      - name: Compose GAR image path
         id: gar
         run: |
-          echo "image_eu=${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.EU_DEV_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
-          echo "image_us=${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.US_PROD_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
+          echo "image=${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev/${{ vars.EU_DEV_GOOGLE_PROJECT }}/main/scalr/runner" | tee -a $GITHUB_OUTPUT
 
       - name: Build and push images
         uses: docker/bake-action@v5
@@ -71,36 +95,26 @@ jobs:
             docker-bake.hcl
             versions.json
           push: true
-          # Replace each target's tag list (first `tags=` removes the Docker
-          # Hub default from docker-bake.hcl; subsequent lines add to the
-          # list) so a single build pushes to both regional GAR repos.
-          # The europe-west4 mirror also holds the per-branch buildcache.
+          # Replace each target's tag list (`tags=` removes the Docker Hub
+          # default from docker-bake.hcl) so the build pushes only to the EU
+          # dev GAR mirror, which also holds the per-branch buildcache.
           set: |
-            full.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.branch.outputs.tag }}
-            full.tags=${{ steps.gar.outputs.image_us }}:${{ steps.branch.outputs.tag }}
-            python39.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.branch.outputs.tag }}-python39
-            python39.tags=${{ steps.gar.outputs.image_us }}:${{ steps.branch.outputs.tag }}-python39
-            slim.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.branch.outputs.tag }}-slim
-            slim.tags=${{ steps.gar.outputs.image_us }}:${{ steps.branch.outputs.tag }}-slim
-            full.cache-from=type=registry,ref=${{ steps.gar.outputs.image_eu }}:buildcache-${{ steps.branch.outputs.tag }}
-            python39.cache-from=type=registry,ref=${{ steps.gar.outputs.image_eu }}:buildcache-${{ steps.branch.outputs.tag }}-python39
-            slim.cache-from=type=registry,ref=${{ steps.gar.outputs.image_eu }}:buildcache-${{ steps.branch.outputs.tag }}-slim
-            full.cache-to=type=registry,ref=${{ steps.gar.outputs.image_eu }}:buildcache-${{ steps.branch.outputs.tag }},mode=max
-            python39.cache-to=type=registry,ref=${{ steps.gar.outputs.image_eu }}:buildcache-${{ steps.branch.outputs.tag }}-python39,mode=max
-            slim.cache-to=type=registry,ref=${{ steps.gar.outputs.image_eu }}:buildcache-${{ steps.branch.outputs.tag }}-slim,mode=max
+            full.tags=${{ steps.gar.outputs.image }}:${{ steps.branch.outputs.tag }}
+            python39.tags=${{ steps.gar.outputs.image }}:${{ steps.branch.outputs.tag }}-python39
+            slim.tags=${{ steps.gar.outputs.image }}:${{ steps.branch.outputs.tag }}-slim
+            full.cache-from=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}
+            python39.cache-from=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}-python39
+            slim.cache-from=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}-slim
+            full.cache-to=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }},mode=max
+            python39.cache-to=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}-python39,mode=max
+            slim.cache-to=type=registry,ref=${{ steps.gar.outputs.image }}:buildcache-${{ steps.branch.outputs.tag }}-slim,mode=max
 
       - name: Summary
         run: |
           cat <<EOF >> $GITHUB_STEP_SUMMARY
-          Pushed GAR test images for branch \`${{ steps.branch.outputs.tag }}\`:
+          Pushed GAR test images (EU dev) for branch \`${{ github.head_ref }}\`:
 
-          europe-west4:
-          - \`${{ steps.gar.outputs.image_eu }}:${{ steps.branch.outputs.tag }}\`
-          - \`${{ steps.gar.outputs.image_eu }}:${{ steps.branch.outputs.tag }}-python39\`
-          - \`${{ steps.gar.outputs.image_eu }}:${{ steps.branch.outputs.tag }}-slim\`
-
-          us-central1:
-          - \`${{ steps.gar.outputs.image_us }}:${{ steps.branch.outputs.tag }}\`
-          - \`${{ steps.gar.outputs.image_us }}:${{ steps.branch.outputs.tag }}-python39\`
-          - \`${{ steps.gar.outputs.image_us }}:${{ steps.branch.outputs.tag }}-slim\`
+          - \`${{ steps.gar.outputs.image }}:${{ steps.branch.outputs.tag }}\`
+          - \`${{ steps.gar.outputs.image }}:${{ steps.branch.outputs.tag }}-python39\`
+          - \`${{ steps.gar.outputs.image }}:${{ steps.branch.outputs.tag }}-slim\`
           EOF

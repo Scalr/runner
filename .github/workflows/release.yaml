@@ -28,16 +28,26 @@ jobs:
       # Authenticate to Google Artifact Registry (GAR) so the same build can be
       # mirrored to the internal Scalr registry alongside Docker Hub.
       - name: Authenticate to Google Cloud
+        id: gcp-auth
         uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{vars.GOOGLE_WORKLOAD_IDENTITY_POOL_PROVIDER}}
           service_account: ${{vars.GOOGLE_SERVICE_ACCOUNT_EMAIL}}
           token_format: access_token
 
-      - name: Configure Docker for GAR
-        run: |
-          gcloud auth configure-docker ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev --quiet
-          gcloud auth configure-docker ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev --quiet
+      - name: Login to GAR (EU dev)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.EU_DEV_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - name: Login to GAR (US prod)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.US_PROD_MIRROR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
