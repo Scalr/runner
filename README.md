@@ -79,6 +79,13 @@ versions below are the current pins (kept in sync with `versions.json` by
 Same as the full image, with Python 3.14 replaced by Python 3.9 (currently
 [v3.9.25](https://www.python.org/downloads/release/python-3925/)).
 
+**Google Cloud SDK pin.** Newer `gcloud` releases dropped Python 3.9
+support, so the SDK is pinned to `564.0.0` (the last version that still
+works on Python 3.9) via the `versions_python39` map. `bump-versions.py`
+does not auto-bump this pin — if you ever change it, recompute the
+per-arch SHA256s for the new version by hand. The full (Python 3.14)
+image continues to track the latest gcloud release.
+
 ### Runtime user
 
 A non-root user `scalr` with uid/gid `1000` is created in the base layer
