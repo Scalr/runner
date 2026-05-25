@@ -91,6 +91,40 @@ jobs:
             python39.cache-to=type=registry,ref=scalr/runner:buildcache-python39,mode=max
             slim.cache-to=type=registry,ref=scalr/runner:buildcache-slim,mode=max
 
+      - name: Summary
+        env:
+          TAG: ${{ steps.image_tag.outputs.tag }}
+          IMG_EU: ${{ steps.gar.outputs.image_eu }}
+          IMG_US: ${{ steps.gar.outputs.image_us }}
+        run: |
+          render() {
+            local title="$1"; shift
+            echo "::group::Published: ${title}"
+            for ref in "$@"; do echo "  - ${ref}"; done
+            echo "::endgroup::"
+            {
+              echo ""
+              echo "**${title}**"
+              echo ""
+              for ref in "$@"; do echo "- \`${ref}\`"; done
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+          {
+            echo "## Published runner images — \`${TAG}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          render "Docker Hub" \
+            "scalr/runner:${TAG}" \
+            "scalr/runner:${TAG}-python39" \
+            "scalr/runner:${TAG}-slim"
+          render "GAR — EU dev" \
+            "${IMG_EU}:${TAG}" \
+            "${IMG_EU}:${TAG}-python39" \
+            "${IMG_EU}:${TAG}-slim"
+          render "GAR — US prod" \
+            "${IMG_US}:${TAG}" \
+            "${IMG_US}:${TAG}-python39" \
+            "${IMG_US}:${TAG}-slim"
+
   update_changelog:
     name: Update Changelog
     runs-on: ubuntu-latest
