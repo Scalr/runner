@@ -94,14 +94,11 @@ jobs:
             versions.json
           push: true
           # Replace each target's tag list (`tags=` removes the Docker Hub
-          # default from docker-bake.hcl since DH login is disabled) so the
-          # build pushes only to the two GAR mirrors.
+          # default from docker-bake.hcl since DH login is disabled). EU dev
+          # push is temporarily disabled — only US prod is pushed.
           set: |
-            full.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
             full.tags=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
-            python39.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
             python39.tags=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
-            slim.tags=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
             slim.tags=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
             full.cache-from=type=gha,scope=full
             full.cache-to=type=gha,scope=full,mode=max
