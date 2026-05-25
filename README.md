@@ -6,7 +6,7 @@ The image is based on the [`debian:trixie-slim`](https://hub.docker.com/_/debian
 
 ## Included Tools
 
-This environment comes pre-equipped with a comprehensive suite of tools essential for development, operations, and cloud interactions. Here's a breakdown of what's included:
+This environment comes pre-equipped with a comprehensive suite of tools essential for development, operations, and cloud interactions. Here's a breakdown of what's included (full image; the `-slim` variant ships only the basic tools through `jq`):
 
 * **Archivators**:
   * zip - Create and extract ZIP archives
@@ -14,7 +14,7 @@ This environment comes pre-equipped with a comprehensive suite of tools essentia
   * gzip - Compress and decompress `.gz` files
 * **Encryption**:
   * gnupg - Secure data encryption and signing
-* **Git (v2.47.2)**:
+* **Git**:
   * Core Git functionality
   * Git LFS (Large File Storage)
   * SSH and HTTP transport protocols
@@ -32,49 +32,62 @@ This environment comes pre-equipped with a comprehensive suite of tools essentia
   * Kubectl ([0.36.1](https://github.com/kubernetes/kubectl/releases/tag/v0.36.1)) - Kubernetes CLI.
   * Scalr CLI ([0.18.0](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.0)) - The command-line to communicate with the Scalr API.
 
-The versions for Python, Cloud Clients, Kubectl, and Scalr CLI are specifically pinned and detailed in the [versions](./versions) file. All other software included in this environment is sourced directly from the Debian Trixie upstream repositories.
+The versions for Python, Cloud Clients, Kubectl, and Scalr CLI are specifically pinned and detailed in [versions.json](./versions.json). All other software included in this environment is sourced directly from the Debian Trixie upstream repositories.
 
-## Python Distribution
+## Image Variants
 
-The environment uses the [standalone Python build](https://github.com/astral-sh/python-build-standalone) provided by the [astral.sh](https://astral.sh/) team.
+| Image Tag | Contents | Python Version |
+|-----------|----------|----------------|
+| `scalr/runner:<x.y.z>` | Basic tools + Python + cloud CLIs | Python 3.14.x |
+| `scalr/runner:<x.y.z>-python39` | Same as default, with Python 3.9 | Python 3.9.x |
+| `scalr/runner:<x.y.z>-slim` | Basic tools only (git, curl, jq, gnupg, etc.) | — |
 
-Two Python variants are available:
+The `-slim` variant is for workflows that don't need Python or cloud CLIs and
+want the smallest possible image.
 
-| Image Tag | Python Version |
-|-----------|----------------|
-| `scalr/runner:<x.y.z>` | Python 3.14.x |
-| `scalr/runner:<x.y.z>-python39` | Python 3.9.x |
+### Python Distribution (default and `-python39`)
+
+The Python-enabled images use the [standalone Python build](https://github.com/astral-sh/python-build-standalone) provided by the [astral.sh](https://astral.sh/) team.
 
 ## Runner Image Building
 
-All tool versions and SHA256 checksums are stored as `KEY=value` lines:
+Builds are driven by [`docker-bake.hcl`](./docker-bake.hcl) (targets, tags,
+cache config) and [`versions.json`](./versions.json) (pinned tool versions and
+SHA256 checksums). `versions.json` is a native Docker Buildx Bake variable
+file containing two maps:
 
-- [`versions`](./versions) — defaults (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin)
-- [`versions_python39`](./versions_python39) — Python 3.9 overrides (consumed only by the `-python39` image)
+- `versions_base` — Debian base image and digest (used by every target, including `-slim`)
+- `versions_full` — extra tools layered on top for the full image (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin)
+- `versions_python39` — Python 3.9 overrides merged on top of `versions_full` for the `-python39` image
 
-The snippet below forwards every entry as a `--build-arg`, so each download is
-verified against a hash pinned in this repo.
+Always pass both files. Every download is verified by SHA256 in the Dockerfile.
 
-### Default image (Python 3.14)
+Tags use `VERSION` from the environment, defaulting to `dev` for local builds.
+There is no `latest` tag — release tags are explicit.
+
+The bake file declares `platforms = ["linux/amd64", "linux/arm64"]` for CI
+multi-arch builds. Local builds with Docker's default driver cannot do
+multi-platform, so add `--set "*.platform=linux/amd64"` (or your host arch)
+and `--load` to every local command.
+
+### Build everything
 
 ```bash
-docker buildx build \
-  $(grep -v '^#' versions | grep -v '^$' | xargs -I {} echo --build-arg={}) \
-  --platform linux/amd64 \
-  -t scalr/runner:latest --load .
+VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load
 ```
 
-### Python 3.9 variant
-
-Pass both files; later args override earlier ones, so `versions_python39`
-replaces the `PYTHON_*` keys from `versions`:
+### Build one variant
 
 ```bash
-docker buildx build \
-  $(grep -v '^#' versions          | grep -v '^$' | xargs -I {} echo --build-arg={}) \
-  $(grep -v '^#' versions_python39 | grep -v '^$' | xargs -I {} echo --build-arg={}) \
-  --platform linux/amd64 \
-  -t scalr/runner:latest-python39 --load .
+VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load full      # scalr/runner:3.0.0
+
+VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load python39  # scalr/runner:3.0.0-python39
+
+VERSION=3.0.0 docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load slim      # scalr/runner:3.0.0-slim
 ```
 
 ## Bumping Versions
@@ -85,7 +98,7 @@ To update all tool versions to their latest releases, run:
 ./bump-versions.py
 ```
 
-This script fetches the latest versions from upstream sources and updates the [versions](./versions) and [versions_python39](./versions_python39) files (plus the "Included Tools" section of this README). For every tool it also refreshes the per-arch SHA256 checksums used by the Dockerfile to verify each download.
+This script fetches the latest versions from upstream sources and updates the `versions_base`, `versions_full`, and `versions_python39` maps in [versions.json](./versions.json) (plus the "Included Tools" section of this README). For every tool it also refreshes the per-arch SHA256 checksums used by the Dockerfile to verify each download.
 
 Requirements: `python3` (stdlib only, no `pip install` needed).
 

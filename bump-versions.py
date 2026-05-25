@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Bump tool versions in ./versions and refresh pinned SHA256 checksums.
+"""Bump tool versions in ./versions.json and refresh pinned SHA256 checksums.
 
 For every tool that has a discoverable upstream version index, this script
-fetches the latest release, updates ./versions, and refreshes the per-arch
-SHA256 checksums the Dockerfile uses to verify each download. The AWS
-Session Manager Plugin version stays manually pinned (no upstream version
-index) but its SHAs are still refreshed against the pinned version.
+fetches the latest release, updates the VERSIONS / VERSIONS_PY39 maps in
+versions.json (a Docker Buildx Bake variable file), and refreshes the
+per-arch SHA256 checksums the Dockerfile uses to verify each download. The
+AWS Session Manager Plugin version stays manually pinned (no upstream
+version index) but its SHAs are still refreshed against the pinned version.
 
 Stdlib only — no pip dependencies.
 """
@@ -23,9 +24,16 @@ import urllib.request
 from pathlib import Path
 from typing import Callable
 
-VERSIONS_FILE = Path("versions")
-PYTHON39_FILE = Path("versions_python39")
+VERSIONS_FILE = Path("versions.json")
 README_FILE = Path("README.md")
+
+# Top-level variable names in versions.json:
+#   versions.json -> variable.<SECTION>.default.<KEY> = <value>
+SECTION_BASE = "versions_base"
+SECTION_FULL = "versions_full"
+SECTION_PY39 = "versions_python39"
+# Default section for the bump() helper — tool-version bumps live in `full`.
+SECTION_DEFAULT = SECTION_FULL
 UA = "bump-versions.py (https://github.com/Scalr/runner)"
 # Optional auth — GitHub's unauthenticated API quota is 60/hour per IP;
 # 5000/hour with any valid token. CI sets GITHUB_TOKEN automatically.
@@ -82,33 +90,29 @@ def fetch_sha_from_sumsfile(sums_url: str, asset: str) -> str:
     raise RuntimeError(f"{asset} not found in {sums_url}")
 
 
-# --- versions file I/O ------------------------------------------------------
+# --- versions.json I/O ------------------------------------------------------
 
 
-def read_versions(path: Path = VERSIONS_FILE) -> dict[str, str]:
-    out: dict[str, str] = {}
-    if not path.exists():
-        return out
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        k, _, v = line.partition("=")
-        out[k] = v
-    return out
+def _load() -> dict:
+    return json.loads(VERSIONS_FILE.read_text())
 
 
-def write_value(key: str, value: str, path: Path = VERSIONS_FILE) -> None:
-    """Update an existing key= line in-place, or append if missing."""
-    lines = path.read_text().splitlines() if path.exists() else []
-    new_line = f"{key}={value}"
-    for i, line in enumerate(lines):
-        if line.startswith(f"{key}="):
-            lines[i] = new_line
-            break
-    else:
-        lines.append(new_line)
-    path.write_text("\n".join(lines) + "\n")
+def _dump(data: dict) -> None:
+    VERSIONS_FILE.write_text(json.dumps(data, indent=2) + "\n")
+
+
+def read_versions(section: str = SECTION_DEFAULT) -> dict[str, str]:
+    try:
+        return dict(_load()["variable"][section]["default"])
+    except (FileNotFoundError, KeyError):
+        return {}
+
+
+def write_value(key: str, value: str, section: str = SECTION_DEFAULT) -> None:
+    """Update or append KEY in the given top-level variable and rewrite the file."""
+    data = _load()
+    data.setdefault("variable", {}).setdefault(section, {}).setdefault("default", {})[key] = value
+    _dump(data)
 
 
 # --- README pretty-section updaters -----------------------------------------
@@ -221,11 +225,13 @@ def _latest_python_version(series: str) -> tuple[str, str]:
     return "", ""
 
 
-def get_debian_base_digest(repo: str = "library/debian", tag: str = "trixie-slim") -> str:
-    """Resolve docker.io/<repo>:<tag> to its current manifest digest.
-
-    Uses Docker Hub's anonymous v2 registry API.
+def get_debian_base_digest(image_ref: str) -> str:
+    """Resolve a Docker Hub image reference (e.g. "debian:trixie-slim") to
+    its current manifest digest. Uses Docker Hub's anonymous v2 registry API.
     """
+    name, _, tag = image_ref.partition(":")
+    repo = name if "/" in name else f"library/{name}"
+    tag = tag or "latest"
     token = http_get_json(
         f"https://auth.docker.io/token?service=registry.docker.io&scope=repository:{repo}:pull"
     )["token"]
@@ -273,7 +279,7 @@ def refresh_kubectl_shas(version: str) -> None:
     )
 
 
-def refresh_python_shas(version: str, release: str, path: Path = VERSIONS_FILE) -> None:
+def refresh_python_shas(version: str, release: str, section: str = SECTION_DEFAULT) -> None:
     sums = (
         "https://github.com/astral-sh/python-build-standalone/releases/download/"
         f"{release}/SHA256SUMS"
@@ -284,7 +290,7 @@ def refresh_python_shas(version: str, release: str, path: Path = VERSIONS_FILE) 
             sums,
             f"cpython-{version}+{release}-x86_64-unknown-linux-gnu-pgo+lto-full.tar.zst",
         ),
-        path,
+        section,
     )
     write_value(
         "PYTHON_SHA256_ARM64",
@@ -292,7 +298,7 @@ def refresh_python_shas(version: str, release: str, path: Path = VERSIONS_FILE) 
             sums,
             f"cpython-{version}+{release}-aarch64-unknown-linux-gnu-pgo+lto-full.tar.zst",
         ),
-        path,
+        section,
     )
 
 
@@ -354,10 +360,11 @@ def bump(
     changes: list[tuple[str, str, str]],
     refresh_shas: Callable[[str], None] | None = None,
     update_readme: Callable[[str], None] | None = None,
+    section: str = SECTION_DEFAULT,
 ) -> bool:
     if latest and current != latest:
         log.info(f"{label}: {current} -> {latest}")
-        write_value(key, latest)
+        write_value(key, latest, section)
         if refresh_shas:
             refresh_shas(latest)
         if update_readme:
@@ -375,14 +382,23 @@ def main() -> int:
 
     log.info("Fetching latest versions...")
     vs = read_versions()
+    base = read_versions(SECTION_BASE)
     changes: list[tuple[str, str, str]] = []
 
+    # DEBIAN_BASE_IMAGE is read-only here — the base image (e.g. debian:trixie-slim)
+    # is a deliberate human choice and must not be auto-bumped. We only refresh the
+    # digest pinning for whatever image is currently configured.
+    debian_image = base.get("DEBIAN_BASE_IMAGE", "")
+    if not debian_image:
+        log.error(f"DEBIAN_BASE_IMAGE missing from {VERSIONS_FILE} ({SECTION_BASE})")
+        return 1
     bump(
-        "debian_base",
+        "debian_base_digest",
         "DEBIAN_BASE_DIGEST",
-        get_debian_base_digest(),
-        vs.get("DEBIAN_BASE_DIGEST", ""),
+        get_debian_base_digest(debian_image),
+        base.get("DEBIAN_BASE_DIGEST", ""),
         changes,
+        section=SECTION_BASE,
     )
     bump(
         "kubectl",
@@ -453,8 +469,8 @@ def main() -> int:
     if py_changed:
         refresh_python_shas(lat_v, lat_r)
 
-    # Python 3.9 variant — same upstream as 3.14, separate file with plain PYTHON_* keys.
-    vs39 = read_versions(PYTHON39_FILE)
+    # Python 3.9 variant — same upstream as 3.14, override block with plain PYTHON_* keys.
+    vs39 = read_versions(SECTION_PY39)
     cur_v39 = vs39.get("PYTHON_VERSION", "")
     cur_r39 = vs39.get("PYTHON_RELEASE", "")
     lat_v39, lat_r39 = get_latest_python39_info()
@@ -464,20 +480,20 @@ def main() -> int:
         py39_changed = False
         if cur_v39 != lat_v39:
             log.info(f"python39: {cur_v39} -> {lat_v39}")
-            write_value("PYTHON_VERSION", lat_v39, PYTHON39_FILE)
+            write_value("PYTHON_VERSION", lat_v39, SECTION_PY39)
             changes.append(("python39", cur_v39, lat_v39))
             py39_changed = True
         else:
             log.info(f"python39: {cur_v39} (up to date)")
         if cur_r39 != lat_r39:
             log.info(f"python39_release: {cur_r39} -> {lat_r39}")
-            write_value("PYTHON_RELEASE", lat_r39, PYTHON39_FILE)
+            write_value("PYTHON_RELEASE", lat_r39, SECTION_PY39)
             changes.append(("python39_release", cur_r39, lat_r39))
             py39_changed = True
         else:
             log.info(f"python39_release: {cur_r39} (up to date)")
         if py39_changed:
-            refresh_python_shas(lat_v39, lat_r39, PYTHON39_FILE)
+            refresh_python_shas(lat_v39, lat_r39, SECTION_PY39)
 
     # AWS SSM Plugin: version is manually pinned (no upstream version index),
     # but its SHAs are refreshed in case the pinned version was hand-edited.
