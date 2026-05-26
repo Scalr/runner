@@ -36,25 +36,22 @@ group "default" {
 }
 
 target "full" {
-  target     = "full"
-  platforms  = ["linux/amd64", "linux/arm64"]
-  args       = merge(versions_base, versions_full)
-  tags       = ["scalr/runner:${VERSION}"]
-  cache-from = ["type=registry,ref=scalr/runner:buildcache"]
+  target    = "full"
+  platforms = ["linux/amd64", "linux/arm64"]
+  args      = merge(versions_base, versions_full)
+  tags      = ["scalr/runner:${VERSION}"]
 }
 
 target "python39" {
-  target     = "full"
-  platforms  = ["linux/amd64", "linux/arm64"]
-  args       = merge(versions_base, versions_full, versions_python39)
-  tags       = ["scalr/runner:${VERSION}-python39"]
-  cache-from = ["type=registry,ref=scalr/runner:buildcache-python39"]
+  target    = "full"
+  platforms = ["linux/amd64", "linux/arm64"]
+  args      = merge(versions_base, versions_full, versions_python39)
+  tags      = ["scalr/runner:${VERSION}-python39"]
 }
 
 target "slim" {
-  target     = "slim"
-  platforms  = ["linux/amd64", "linux/arm64"]
-  args       = versions_base
-  tags       = ["scalr/runner:${VERSION}-slim"]
-  cache-from = ["type=registry,ref=scalr/runner:buildcache-slim"]
+  target    = "slim"
+  platforms = ["linux/amd64", "linux/arm64"]
+  args      = versions_base
+  tags      = ["scalr/runner:${VERSION}-slim"]
 }
