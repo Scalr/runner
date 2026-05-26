@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/Scalr/runner/tree/0.4.0) (2026-05-26)
+
+### Added
+- Added new `scalr/runner:x.y.z-slim` image variant.
+
+### Changed
+- Updated Python: 3.14.4 → 3.15.4
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.35.3 → 1.36.1
+  - `gcloud`: 564.0.0 → 569.0.0
+  - `aws`: 2.34.29 → 2.34.53
+  - `azure`: 2.85.0 → 2.86.0
+  - `scalr`: 0.17.8 → 0.18.0
+- Updated base image: `debian:trixie-slim` snapshot to `sha256:b6e2a152f22a40ff69d92cb397223c906017e1391a73c952b588e51af8883bf8`.
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.3.0...0.4.0)
+[Full Changelog](https://github.com/Scalr/runner/compare/0.3.0...0.4.0)
+
 ## [0.3.0](https://github.com/Scalr/runner/tree/0.3.0) (2026-04-13)
 
 [Full Changelog](https://github.com/Scalr/runner/compare/0.2.0...0.3.0)
