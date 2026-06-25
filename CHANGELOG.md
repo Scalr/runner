@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.2](https://github.com/Scalr/runner/tree/0.4.2) (2026-06-25)
+
+### Changed
+- `git-lfs`: use custom-built binary with patched Go dependencies.
+[Full Changelog](https://github.com/Scalr/runner/compare/0.4.0...0.4.2)
+
 ## [0.4.0](https://github.com/Scalr/runner/tree/0.4.0) (2026-05-26)
 
 ### Added
