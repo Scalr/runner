@@ -215,7 +215,7 @@ EOT
 ARG AZURE_CLI_VERSION
 LABEL azure-cli.version=${AZURE_CLI_VERSION}
 RUN <<EOT
-  AZ_DIST=$(lsb_release -cs)
+  AZ_DIST=bookworm
   mkdir -p /etc/apt/keyrings
   curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/keyrings/microsoft.gpg > /dev/null
   chmod go+r /etc/apt/keyrings/microsoft.gpg
