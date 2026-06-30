@@ -68,8 +68,7 @@ COPY --from=git-lfs-build /out/git-lfs /usr/bin/git-lfs
 # runs with --user 1000). Created before hardening removes useradd.
 RUN <<EOT
   userdel -r ubuntu
-  groupdel ubuntu
-  adduser --uid 1000 --disabled-password --gecos "" scalr
+  useradd -u 1000 -m scalr
 EOT
 
 # ----------------------------------------------------------------------------
