@@ -66,7 +66,7 @@ COPY --from=git-lfs-build /out/git-lfs /usr/bin/git-lfs
 
 # Non-root user available in every variant (optional; used when the container
 # runs with --user 1000). Created before hardening removes useradd.
-RUN adduser --uid 1000 --disabled-password --gecos "" scalr
+RUN adduser --uid 1000 --ingroup ubuntu --disabled-password --gecos "" scalr
 
 
 # ----------------------------------------------------------------------------
