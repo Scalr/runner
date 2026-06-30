@@ -2,8 +2,8 @@
   "variable": {
     "versions_base": {
       "default": {
-        "DEBIAN_BASE_IMAGE": "debian:trixie-slim",
-        "DEBIAN_BASE_DIGEST": "sha256:b6e2a152f22a40ff69d92cb397223c906017e1391a73c952b588e51af8883bf8"
+        "UBUNTU_BASE_IMAGE": "ubuntu:26.04",
+        "UBUNTU_BASE_DIGEST": "sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba"
       }
     },
     "versions_full": {

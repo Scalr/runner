@@ -10,12 +10,12 @@
 #   - full: base + Python + cloud CLIs + hardening (published as scalr/runner:<x.y.z>
 #           and scalr/runner:<x.y.z>-python39)
 #
-# DEBIAN_BASE_IMAGE, DEBIAN_BASE_DIGEST and other ARGs are supplied at build
+# UBUNTU_BASE_IMAGE, UBUNTU_BASE_DIGEST and other ARGs are supplied at build
 # time via bake (see docker-bake.hcl + versions.json). The skip directive
 # above silences BuildKit's check for ARGs in FROM without a default.
 
-ARG DEBIAN_BASE_IMAGE
-ARG DEBIAN_BASE_DIGEST
+ARG UBUNTU_BASE_IMAGE
+ARG UBUNTU_BASE_DIGEST
 
 # Custom git-lfs build, we rely on Wolfi's approach from
 # https://github.com/wolfi-dev/os/blob/main/git-lfs.yaml
@@ -38,7 +38,7 @@ RUN <<EOT
     -o /out/git-lfs .
 EOT
 
-FROM ${DEBIAN_BASE_IMAGE}@${DEBIAN_BASE_DIGEST} AS base
+FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS base
 
 ARG TARGETARCH
 
