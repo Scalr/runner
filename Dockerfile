@@ -48,6 +48,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 RUN <<EOT
   # Install base software
   apt-get update -y
+  apt-get upgrade -y
   apt-get install -y --no-install-recommends \
     wget curl ca-certificates \
     git-core openssh-client \
