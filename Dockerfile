@@ -107,7 +107,7 @@ ENTRYPOINT ["/usr/bin/bash"]
 # ----------------------------------------------------------------------------
 # full: base + Python + cloud CLIs + hardening (final image)
 # ----------------------------------------------------------------------------
-FROM slim-base AS full-base
+FROM slim AS full
 
 # Install python standalone build.
 ARG PYTHON_VERSION
@@ -276,8 +276,5 @@ RUN <<EOT
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
 EOT
 
-
-FROM scratch as full
-COPY --from=full-base / /
 
 ENTRYPOINT ["/usr/bin/bash"]
