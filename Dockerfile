@@ -268,10 +268,12 @@ RUN <<EOT
     /usr/sbin/deluser /usr/sbin/delgroup \
     /usr/sbin/visudo \
     /bin/mount /usr/bin/mount \
-    /bin/umount /usr/bin/umount \
-    /usr/bin/pebble
+    /bin/umount /usr/bin/umount
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
+  # Remove unnecesary files for final build
+  rm -rf \
+    /usr/bin/pebble
 EOT
 
 
