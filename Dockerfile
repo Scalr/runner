@@ -48,7 +48,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 RUN <<EOT
   # Install base software
   apt-get update -y
-  apt-get upgrade -y
   apt-get install -y --no-install-recommends \
     wget curl ca-certificates \
     git-core openssh-client \
@@ -108,6 +107,8 @@ ENTRYPOINT ["/usr/bin/bash"]
 # full: base + Python + cloud CLIs + hardening (final image)
 # ----------------------------------------------------------------------------
 FROM slim AS full
+
+SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
 # Install python standalone build.
 ARG PYTHON_VERSION
