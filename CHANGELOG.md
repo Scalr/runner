@@ -10,6 +10,7 @@
   - `aws`: 2.34.53 → 2.35.13
   - `azure`: 2.86.0 → 2.87.0
   - `scalr`: 0.17.8 → 0.18.0
+
 [Full Changelog](https://github.com/Scalr/runner/compare/0.4.2...0.5.0)
 
 ## [0.4.2](https://github.com/Scalr/runner/tree/0.4.2) (2026-06-25)
