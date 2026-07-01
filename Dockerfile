@@ -107,7 +107,7 @@ ENTRYPOINT ["/usr/bin/bash"]
 # ----------------------------------------------------------------------------
 # full: base + Python + cloud CLIs + hardening (final image)
 # ----------------------------------------------------------------------------
-FROM base AS full-base
+FROM slim-base AS full-base
 
 # Install python standalone build.
 ARG PYTHON_VERSION
