@@ -2,30 +2,41 @@
 
 ## [0.5.0](https://github.com/Scalr/runner/tree/0.5.0) (2026-07-01)
 
+### Changed
+- Updated base image: `debian:trixie-slim` → `ubuntu:26.04` (snapshot `sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba`).
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.36.1 → 1.36.2
+  - `gcloud`: 569.0.0 → 575.0.0
+  - `aws`: 2.34.53 → 2.35.13
+  - `azure`: 2.86.0 → 2.87.0
+  - `scalr`: 0.17.8 → 0.18.0
+
 [Full Changelog](https://github.com/Scalr/runner/compare/0.4.2...0.5.0)
-
-**Merged pull requests:**
-
-- SCALRCORE-38942 [\#18](https://github.com/Scalr/runner/pull/18) ([artemvang](https://github.com/artemvang))
-- Update CHANGELOG for version 0.4.2 [\#17](https://github.com/Scalr/runner/pull/17) ([artemvang](https://github.com/artemvang))
 
 ## [0.4.2](https://github.com/Scalr/runner/tree/0.4.2) (2026-06-25)
 
+### Changed
+- `git-lfs`: use custom-built binary with patched Go dependencies.
+
 [Full Changelog](https://github.com/Scalr/runner/compare/0.4.0...0.4.2)
-
-**Merged pull requests:**
-
-- Add custom git lfs build [\#16](https://github.com/Scalr/runner/pull/16) ([artemvang](https://github.com/artemvang))
-- Update CHANGELOG for version 0.4.0 [\#15](https://github.com/Scalr/runner/pull/15) ([mermoldy](https://github.com/mermoldy))
 
 ## [0.4.0](https://github.com/Scalr/runner/tree/0.4.0) (2026-05-26)
 
+### Added
+
+- Added new `scalr/runner:x.y.z-slim` image variant.
+
+### Changed
+- Updated Python: 3.14.4 → 3.15.4
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.35.3 → 1.36.1
+  - `gcloud`: 564.0.0 → 569.0.0
+  - `aws`: 2.34.29 → 2.34.53
+  - `azure`: 2.85.0 → 2.86.0
+  - `scalr`: 0.17.8 → 0.18.0
+- Updated base image: `debian:trixie-slim` snapshot to `sha256:b6e2a152f22a40ff69d92cb397223c906017e1391a73c952b588e51af8883bf8`.
+
 [Full Changelog](https://github.com/Scalr/runner/compare/0.3.0...0.4.0)
-
-**Merged pull requests:**
-
-- Fix build pipeline [\#14](https://github.com/Scalr/runner/pull/14) ([mermoldy](https://github.com/mermoldy))
-- SCALRCORE-38392 Upgrade python to 3.14.5 [\#12](https://github.com/Scalr/runner/pull/12) ([mermoldy](https://github.com/mermoldy))
 
 ## [0.3.0](https://github.com/Scalr/runner/tree/0.3.0) (2026-04-13)
 
