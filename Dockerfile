@@ -38,7 +38,7 @@ RUN <<EOT
     -o /out/git-lfs .
 EOT
 
-FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS base
+FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS slim-base
 
 ARG TARGETARCH
 
@@ -72,11 +72,6 @@ RUN <<EOT
   useradd -u 1000 -m scalr
 EOT
 
-# ----------------------------------------------------------------------------
-# slim: base + security hardening (final image)
-# ----------------------------------------------------------------------------
-FROM base AS slim
-
 # Security hardening: strip privilege-escalation surface inherited from the base image.
 # Must run last so it cannot be undone by a later layer.
 RUN <<EOT
@@ -95,18 +90,24 @@ RUN <<EOT
     /usr/sbin/deluser /usr/sbin/delgroup \
     /usr/sbin/visudo \
     /bin/mount /usr/bin/mount \
-    /bin/umount /usr/bin/umount
+    /bin/umount /usr/bin/umount \
+    /usr/bin/pebble
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
 EOT
 
-ENTRYPOINT ["/usr/bin/bash"]
+# ----------------------------------------------------------------------------
+# slim: base + security hardening (final image)
+# ----------------------------------------------------------------------------
+FROM scratch AS slim
+COPY --from=slim-base / /
 
+ENTRYPOINT ["/usr/bin/bash"]
 
 # ----------------------------------------------------------------------------
 # full: base + Python + cloud CLIs + hardening (final image)
 # ----------------------------------------------------------------------------
-FROM base AS full
+FROM base AS full-base
 
 # Install python standalone build.
 ARG PYTHON_VERSION
@@ -269,9 +270,14 @@ RUN <<EOT
     /usr/sbin/deluser /usr/sbin/delgroup \
     /usr/sbin/visudo \
     /bin/mount /usr/bin/mount \
-    /bin/umount /usr/bin/umount
+    /bin/umount /usr/bin/umount \
+    /usr/bin/pebble
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
 EOT
+
+
+FROM scratch as full
+COPY --from=full-base / /
 
 ENTRYPOINT ["/usr/bin/bash"]
