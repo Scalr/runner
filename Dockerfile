@@ -38,7 +38,7 @@ RUN <<EOT
     -o /out/git-lfs .
 EOT
 
-FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS slim-base
+FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS slim
 
 ARG TARGETARCH
 
@@ -94,12 +94,6 @@ RUN <<EOT
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
 EOT
-
-# ----------------------------------------------------------------------------
-# slim: base + security hardening (final image)
-# ----------------------------------------------------------------------------
-FROM scratch AS slim
-COPY --from=slim-base / /
 
 ENTRYPOINT ["/usr/bin/bash"]
 
