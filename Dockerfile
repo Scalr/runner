@@ -110,6 +110,8 @@ FROM slim AS full
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
+ARG TARGETARCH
+
 # Install python standalone build.
 ARG PYTHON_VERSION
 ARG PYTHON_RELEASE
