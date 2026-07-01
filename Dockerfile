@@ -37,7 +37,7 @@ RUN <<EOT
     -o /out/git-lfs .
 EOT
 
-FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS slim
+FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS base-slim
 
 ARG TARGETARCH
 
@@ -95,6 +95,10 @@ RUN <<EOT
   rm -rf \
     /usr/bin/pebble
 EOT
+
+FROM scratch AS slim
+
+COPY --from=base-slim / /
 
 ENTRYPOINT ["/usr/bin/bash"]
 
