@@ -5,9 +5,8 @@
 # Note: This is a PUBLIC image, it should not contain any sensitive data.
 #
 # Build targets:
-#   - base: basic tools only (internal stage, not published)
-#   - slim: base + security hardening (published as scalr/runner:<x.y.z>-slim)
-#   - full: base + Python + cloud CLIs + hardening (published as scalr/runner:<x.y.z>
+#   - slim: basic tools + security hardening (published as scalr/runner:<x.y.z>-slim)
+#   - full: slim + Python + cloud CLIs + hardening (published as scalr/runner:<x.y.z>
 #           and scalr/runner:<x.y.z>-python39)
 #
 # UBUNTU_BASE_IMAGE, UBUNTU_BASE_DIGEST and other ARGs are supplied at build
@@ -89,10 +88,12 @@ RUN <<EOT
     /usr/sbin/deluser /usr/sbin/delgroup \
     /usr/sbin/visudo \
     /bin/mount /usr/bin/mount \
-    /bin/umount /usr/bin/umount \
-    /usr/bin/pebble
+    /bin/umount /usr/bin/umount
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
+  # Remove unnecesary files for final build
+  rm -rf \
+    /usr/bin/pebble
 EOT
 
 ENTRYPOINT ["/usr/bin/bash"]
