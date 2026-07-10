@@ -39,19 +39,19 @@ target "full" {
   target    = "full"
   platforms = ["linux/amd64", "linux/arm64"]
   args      = merge(versions_base, versions_full)
-  tags      = ["scalr/runner:${VERSION}"]
+  tags      = ["scalr/runner:${VERSION}", "scalr/runner:v${VERSION}"]
 }
 
 target "python39" {
   target    = "full"
   platforms = ["linux/amd64", "linux/arm64"]
   args      = merge(versions_base, versions_full, versions_python39)
-  tags      = ["scalr/runner:${VERSION}-python39"]
+  tags      = ["scalr/runner:${VERSION}-python39", "scalr/runner:v${VERSION}-python39"]
 }
 
 target "slim" {
   target    = "slim"
   platforms = ["linux/amd64", "linux/arm64"]
   args      = versions_base
-  tags      = ["scalr/runner:${VERSION}-slim"]
+  tags      = ["scalr/runner:${VERSION}-slim", "scalr/runner:v${VERSION}-slim"]
 }
