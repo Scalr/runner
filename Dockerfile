@@ -5,16 +5,17 @@
 # Note: This is a PUBLIC image, it should not contain any sensitive data.
 #
 # Build targets:
-#   - slim: basic tools + security hardening (published as scalr/runner:<x.y.z>-slim)
-#   - full: slim + Python + cloud CLIs + hardening (published as scalr/runner:<x.y.z>
+#   - base: basic tools only (internal stage, not published)
+#   - slim: base + security hardening (published as scalr/runner:<x.y.z>-slim)
+#   - full: base + Python + cloud CLIs + hardening (published as scalr/runner:<x.y.z>
 #           and scalr/runner:<x.y.z>-python39)
 #
-# UBUNTU_BASE_IMAGE, UBUNTU_BASE_DIGEST and other ARGs are supplied at build
+# DEBIAN_BASE_IMAGE, DEBIAN_BASE_DIGEST and other ARGs are supplied at build
 # time via bake (see docker-bake.hcl + versions.json). The skip directive
 # above silences BuildKit's check for ARGs in FROM without a default.
 
-ARG UBUNTU_BASE_IMAGE
-ARG UBUNTU_BASE_DIGEST
+ARG DEBIAN_BASE_IMAGE
+ARG DEBIAN_BASE_DIGEST
 
 # Custom git-lfs build, we rely on Wolfi's approach from
 # https://github.com/wolfi-dev/os/blob/main/git-lfs.yaml
@@ -37,7 +38,7 @@ RUN <<EOT
     -o /out/git-lfs .
 EOT
 
-FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS base-slim
+FROM ${DEBIAN_BASE_IMAGE}@${DEBIAN_BASE_DIGEST} AS base
 
 ARG TARGETARCH
 
@@ -65,10 +66,13 @@ COPY --from=git-lfs-build /out/git-lfs /usr/bin/git-lfs
 
 # Non-root user available in every variant (optional; used when the container
 # runs with --user 1000). Created before hardening removes useradd.
-RUN <<EOT
-  userdel -r ubuntu
-  useradd -u 1000 -m scalr
-EOT
+RUN useradd -u 1000 -m scalr
+
+
+# ----------------------------------------------------------------------------
+# slim: base + security hardening (final image)
+# ----------------------------------------------------------------------------
+FROM base AS slim
 
 # Security hardening: strip privilege-escalation surface inherited from the base image.
 # Must run last so it cannot be undone by a later layer.
@@ -91,25 +95,15 @@ RUN <<EOT
     /bin/umount /usr/bin/umount
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
-  # Remove unnecesary files for final build
-  rm -rf \
-    /usr/bin/pebble
 EOT
 
-FROM scratch AS slim
-
-COPY --from=base-slim / /
-
 ENTRYPOINT ["/usr/bin/bash"]
+
 
 # ----------------------------------------------------------------------------
 # full: base + Python + cloud CLIs + hardening (final image)
 # ----------------------------------------------------------------------------
-FROM slim AS full
-
-SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
-
-ARG TARGETARCH
+FROM base AS full
 
 # Install python standalone build.
 ARG PYTHON_VERSION
@@ -276,6 +270,5 @@ RUN <<EOT
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
 EOT
-
 
 ENTRYPOINT ["/usr/bin/bash"]
