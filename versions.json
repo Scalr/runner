@@ -2,8 +2,8 @@
   "variable": {
     "versions_base": {
       "default": {
-        "UBUNTU_BASE_IMAGE": "ubuntu:26.04",
-        "UBUNTU_BASE_DIGEST": "sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba"
+        "DEBIAN_BASE_IMAGE": "debian:trixie-slim",
+        "DEBIAN_BASE_DIGEST": "sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd"
       }
     },
     "versions_full": {
@@ -11,13 +11,13 @@
         "KUBECTL_VERSION": "v1.36.2",
         "KUBECTL_SHA256_AMD64": "1e9045ec32bea85da43de85f0065358529ea7c7a152eca78154fba5b58c27d82",
         "KUBECTL_SHA256_ARM64": "c957eb8c4bea27a3bb35b269edd9082e27f027f7b76b20b5bf4afebc726c6d3e",
-        "GCLOUD_VERSION": "575.0.0",
-        "GCLOUD_SHA256_AMD64": "92a7331b6b20c9869c5e234f15e44850a58af435ccab43578d4ede1ef368a6e6",
-        "GCLOUD_SHA256_ARM64": "54b607d35b7335297e5e4166b3f9137baa5b1a7c7d2f8ce396411e91bd1fd4df",
-        "AWS_CLI_VERSION": "2.35.13",
-        "AWS_CLI_SHA256_AMD64": "9d8358b854dfac0decde81a0a21471abb5fd52d7366533bf25affcbbc2d5ad90",
-        "AWS_CLI_SHA256_ARM64": "c562b596fa9711f340c82307ca9eff576a4b96e75f1a003d1e6b2fec77820883",
-        "AZURE_CLI_VERSION": "2.87.0",
+        "GCLOUD_VERSION": "575.0.1",
+        "GCLOUD_SHA256_AMD64": "7027aef2f0d72c147da6b2263cf77a4a4c659afe28aeca51a45134249997e2c3",
+        "GCLOUD_SHA256_ARM64": "1330c1303767dd15f56c50ff4ef5d6f0900ff46f139b46cfef72b93580102029",
+        "AWS_CLI_VERSION": "2.35.22",
+        "AWS_CLI_SHA256_AMD64": "edd9ba798acb3ef6131e5bf902d81999ebc8ad72fbec8771d690f3ed0c059110",
+        "AWS_CLI_SHA256_ARM64": "022e392e079ada523be29cdbb45061a74be6344179f8fddf2b8183f1898683f1",
+        "AZURE_CLI_VERSION": "2.88.0",
         "SCALR_CLI_VERSION": "0.18.0",
         "SCALR_CLI_SHA256_AMD64": "5321bcebd48d30f7c3a936a5c5f10d9d3cfb77ef2974575d4df8e7ee9f890589",
         "SCALR_CLI_SHA256_ARM64": "8dcada09b5bf10001f4e83190fc9c2a66df692beb07a74b4afe503d2fa75629e",
