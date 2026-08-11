@@ -1,9 +1,14 @@
-name: Release Runner Image
+name: Release Runner Image (Debian)
+
+# Triggered by tags of the form `debian/<x.y.z>`, e.g. `debian/0.5.0`.
+# The distro prefix is stripped before it is used as the image tag, so
+# `debian/0.5.0` publishes `scalr/runner:0.5.0`. The Ubuntu family is
+# released independently by release-ubuntu.yaml.
 
 on:
   push:
     tags:
-      - "*.*.*"
+      - "debian/*.*.*"
 
 permissions:
   # Needed by the update_changelog job to git-push CHANGELOG.md back to main.
@@ -55,10 +60,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # `refs/tags/debian/0.5.0` -> `0.5.0`
       - name: Format Image Tag
         id: image_tag
         run: |
-          echo "tag=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_OUTPUT
+          ref="${GITHUB_REF#refs/tags/}"
+          echo "tag=${ref#debian/}" | tee -a $GITHUB_OUTPUT
 
       # Two regional GAR mirrors — EU dev and US production.
       - name: Compose GAR image paths
@@ -75,24 +82,25 @@ jobs:
           files: |
             docker-bake.hcl
             versions.json
+          targets: debian
           push: true
           # Append both GAR region tags to each target so a single push writes
           # to Docker Hub (declared in docker-bake.hcl) and both regional GAR
           # mirrors. Cache uses GitHub Actions cache (per-repo, private) so
           # nothing cache-related leaks into the public Docker Hub repo.
           set: |
-            full.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
-            full.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
-            python39.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
-            python39.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
-            slim.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
-            slim.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
-            full.cache-from=type=gha,scope=full
-            full.cache-to=type=gha,scope=full,mode=max
-            python39.cache-from=type=gha,scope=python39
-            python39.cache-to=type=gha,scope=python39,mode=max
-            slim.cache-from=type=gha,scope=slim
-            slim.cache-to=type=gha,scope=slim,mode=max
+            debian-full.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
+            debian-full.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
+            debian-python39.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
+            debian-python39.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
+            debian-slim.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
+            debian-slim.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
+            debian-full.cache-from=type=gha,scope=debian-full
+            debian-full.cache-to=type=gha,scope=debian-full,mode=max
+            debian-python39.cache-from=type=gha,scope=debian-python39
+            debian-python39.cache-to=type=gha,scope=debian-python39,mode=max
+            debian-slim.cache-from=type=gha,scope=debian-slim
+            debian-slim.cache-to=type=gha,scope=debian-slim,mode=max
 
       - name: Report published images
         env:
@@ -100,7 +108,7 @@ jobs:
           IMG_EU: ${{ steps.gar.outputs.image_eu }}
           IMG_US: ${{ steps.gar.outputs.image_us }}
         run: |
-          echo "Published runner images for release ${TAG}"
+          echo "Published Debian runner images for release ${TAG}"
           echo ""
           echo "Docker Hub:"
           echo "  scalr/runner:${TAG}"
@@ -117,7 +125,7 @@ jobs:
           echo "  ${IMG_US}:${TAG}-python39"
           echo "  ${IMG_US}:${TAG}-slim"
           {
-            echo "## Published runner images — \`${TAG}\`"
+            echo "## Published Debian runner images — \`${TAG}\`"
             echo ""
             echo "**Docker Hub**"
             echo ""
@@ -137,35 +145,3 @@ jobs:
             echo "- \`${IMG_US}:${TAG}-python39\`"
             echo "- \`${IMG_US}:${TAG}-slim\`"
           } >> "$GITHUB_STEP_SUMMARY"
-
-  update_changelog:
-    name: Update Changelog
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Install Changelog Generator
-        run: gem install github_changelog_generator
-
-      - name: Update CHANGELOG.md
-        env:
-          CHANGELOG_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          github_changelog_generator -u Scalr -p runner --output CHANGELOG.md
-          git add CHANGELOG.md
-          if [ ! -n "$(git status -s)" ]; then
-            echo "NOTHING TO COMMIT"
-          else
-            git config user.name "${GITHUB_ACTOR}"
-            git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-            git commit -m "Update CHANGELOG.md"
-            git push --no-verify
-          fi

@@ -2,11 +2,14 @@
 """Bump tool versions in ./versions.json and refresh pinned SHA256 checksums.
 
 For every tool that has a discoverable upstream version index, this script
-fetches the latest release, updates the VERSIONS / VERSIONS_PY39 maps in
-versions.json (a Docker Buildx Bake variable file), and refreshes the
-per-arch SHA256 checksums the Dockerfile uses to verify each download. The
-AWS Session Manager Plugin version stays manually pinned (no upstream
-version index) but its SHAs are still refreshed against the pinned version.
+fetches the latest release, updates the version maps in versions.json (a
+Docker Buildx Bake variable file), and refreshes the per-arch SHA256
+checksums the Dockerfiles use to verify each download. Both base images —
+Debian (versions_debian) and Ubuntu (versions_ubuntu) — get their digest
+pins refreshed; tool versions are shared by both distros (versions_full /
+versions_python39). The AWS Session Manager Plugin version stays manually
+pinned (no upstream version index) but its SHAs are still refreshed against
+the pinned version.
 
 Stdlib only — no pip dependencies.
 """
@@ -29,7 +32,8 @@ README_FILE = Path("README.md")
 
 # Top-level variable names in versions.json:
 #   versions.json -> variable.<SECTION>.default.<KEY> = <value>
-SECTION_BASE = "versions_base"
+SECTION_DEBIAN = "versions_debian"
+SECTION_UBUNTU = "versions_ubuntu"
 SECTION_FULL = "versions_full"
 SECTION_PY39 = "versions_python39"
 # Default section for the bump() helper — tool-version bumps live in `full`.
@@ -225,8 +229,8 @@ def _latest_python_version(series: str) -> tuple[str, str]:
     return "", ""
 
 
-def get_ubuntu_base_digest(image_ref: str) -> str:
-    """Resolve a Docker Hub image reference (e.g. "ubuntu:26.04") to
+def _dockerhub_digest(image_ref: str) -> str:
+    """Resolve a Docker Hub image reference (e.g. "debian:trixie-slim") to
     its current manifest digest. Uses Docker Hub's anonymous v2 registry API.
     """
     name, _, tag = image_ref.partition(":")
@@ -249,6 +253,16 @@ def get_ubuntu_base_digest(image_ref: str) -> str:
     )
     with urllib.request.urlopen(req, timeout=60) as resp:
         return resp.headers["Docker-Content-Digest"]
+
+
+def get_debian_base_digest(image_ref: str) -> str:
+    """Current manifest digest of the Debian base image (e.g. "debian:trixie-slim")."""
+    return _dockerhub_digest(image_ref)
+
+
+def get_ubuntu_base_digest(image_ref: str) -> str:
+    """Current manifest digest of the Ubuntu base image (e.g. "ubuntu:26.04")."""
+    return _dockerhub_digest(image_ref)
 
 
 def get_latest_python_info() -> tuple[str, str]:
@@ -382,23 +396,36 @@ def main() -> int:
 
     log.info("Fetching latest versions...")
     vs = read_versions()
-    base = read_versions(SECTION_BASE)
+    debian = read_versions(SECTION_DEBIAN)
+    ubuntu = read_versions(SECTION_UBUNTU)
     changes: list[tuple[str, str, str]] = []
 
-    # UBUNTU_BASE_IMAGE is read-only here — the base image (e.g. ubuntu:26.04)
-    # is a deliberate human choice and must not be auto-bumped. We only refresh the
-    # digest pinning for whatever image is currently configured.
-    ubuntu_image = base.get("UBUNTU_BASE_IMAGE", "")
+    # *_BASE_IMAGE is read-only here — the base image (e.g. debian:trixie-slim,
+    # ubuntu:26.04) is a deliberate human choice and must not be auto-bumped. We
+    # only refresh the digest pinning for whatever image is currently configured.
+    debian_image = debian.get("DEBIAN_BASE_IMAGE", "")
+    if not debian_image:
+        log.error(f"DEBIAN_BASE_IMAGE missing from {VERSIONS_FILE} ({SECTION_DEBIAN})")
+        return 1
+    bump(
+        "debian_base_digest",
+        "DEBIAN_BASE_DIGEST",
+        get_debian_base_digest(debian_image),
+        debian.get("DEBIAN_BASE_DIGEST", ""),
+        changes,
+        section=SECTION_DEBIAN,
+    )
+    ubuntu_image = ubuntu.get("UBUNTU_BASE_IMAGE", "")
     if not ubuntu_image:
-        log.error(f"UBUNTU_BASE_IMAGE missing from {VERSIONS_FILE} ({SECTION_BASE})")
+        log.error(f"UBUNTU_BASE_IMAGE missing from {VERSIONS_FILE} ({SECTION_UBUNTU})")
         return 1
     bump(
         "ubuntu_base_digest",
         "UBUNTU_BASE_DIGEST",
         get_ubuntu_base_digest(ubuntu_image),
-        base.get("UBUNTU_BASE_DIGEST", ""),
+        ubuntu.get("UBUNTU_BASE_DIGEST", ""),
         changes,
-        section=SECTION_BASE,
+        section=SECTION_UBUNTU,
     )
     bump(
         "kubectl",

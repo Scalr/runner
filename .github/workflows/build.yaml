@@ -1,4 +1,4 @@
-name: Build Runner Image
+name: Build Runner Images
 
 on:
   push:
@@ -14,8 +14,18 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Test (${{ matrix.distro }})
     runs-on: ubuntu-latest
+    # Both distro families are built in parallel; a failure in one does not
+    # cancel the other.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: debian
+            image: scalr/runner
+          - distro: ubuntu
+            image: scalr/runner-ubuntu
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,43 +46,50 @@ jobs:
           files: |
             docker-bake.hcl
             versions.json
+          targets: ${{ matrix.distro }}
           load: true
           # Use GitHub Actions cache (type=gha) — scoped per target, lives in
           # GitHub's per-repo cache backend, not the public Docker Hub repo.
           set: |
             *.platform=linux/amd64
-            full.tags=scalr/runner:sha-${{ github.sha }}
-            python39.tags=scalr/runner:sha-${{ github.sha }}-python39
-            slim.tags=scalr/runner:sha-${{ github.sha }}-slim
-            full.cache-from=type=gha,scope=full
-            full.cache-to=type=gha,scope=full,mode=max
-            python39.cache-from=type=gha,scope=python39
-            python39.cache-to=type=gha,scope=python39,mode=max
-            slim.cache-from=type=gha,scope=slim
-            slim.cache-to=type=gha,scope=slim,mode=max
+            ${{ matrix.distro }}-full.tags=${{ matrix.image }}:sha-${{ github.sha }}
+            ${{ matrix.distro }}-python39.tags=${{ matrix.image }}:sha-${{ github.sha }}-python39
+            ${{ matrix.distro }}-slim.tags=${{ matrix.image }}:sha-${{ github.sha }}-slim
+            ${{ matrix.distro }}-full.cache-from=type=gha,scope=${{ matrix.distro }}-full
+            ${{ matrix.distro }}-full.cache-to=type=gha,scope=${{ matrix.distro }}-full,mode=max
+            ${{ matrix.distro }}-python39.cache-from=type=gha,scope=${{ matrix.distro }}-python39
+            ${{ matrix.distro }}-python39.cache-to=type=gha,scope=${{ matrix.distro }}-python39,mode=max
+            ${{ matrix.distro }}-slim.cache-from=type=gha,scope=${{ matrix.distro }}-slim
+            ${{ matrix.distro }}-slim.cache-to=type=gha,scope=${{ matrix.distro }}-slim,mode=max
 
       - name: Test full image
+        env:
+          IMAGE: ${{ matrix.image }}:sha-${{ github.sha }}
         run: |
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'gcloud version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'aws --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'az --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'kubectl version --client'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'scalr -version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'python --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }} -xc 'pip install requests'
+          docker run --rm "$IMAGE" -xc 'gcloud version'
+          docker run --rm "$IMAGE" -xc 'aws --version'
+          docker run --rm "$IMAGE" -xc 'az --version'
+          docker run --rm "$IMAGE" -xc 'kubectl version --client'
+          docker run --rm "$IMAGE" -xc 'scalr -version'
+          docker run --rm "$IMAGE" -xc 'python --version'
+          docker run --rm "$IMAGE" -xc 'pip --version'
+          docker run --rm "$IMAGE" -xc 'pip install requests'
 
       - name: Test python39 image
+        env:
+          IMAGE: ${{ matrix.image }}:sha-${{ github.sha }}-python39
         run: |
-          docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'python --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'pip --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }}-python39 -xc 'pip install requests'
+          docker run --rm "$IMAGE" -xc 'python --version'
+          docker run --rm "$IMAGE" -xc 'pip --version'
+          docker run --rm "$IMAGE" -xc 'pip install requests'
 
       - name: Test slim image
+        env:
+          IMAGE: ${{ matrix.image }}:sha-${{ github.sha }}-slim
         run: |
-          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc 'git --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc 'curl --version'
-          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc 'jq --version'
+          docker run --rm "$IMAGE" -xc 'git --version'
+          docker run --rm "$IMAGE" -xc 'curl --version'
+          docker run --rm "$IMAGE" -xc 'jq --version'
           # Confirm python and cloud tools are absent.
-          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc '! command -v python'
-          docker run --rm scalr/runner:sha-${{ github.sha }}-slim -xc '! command -v aws'
+          docker run --rm "$IMAGE" -xc '! command -v python'
+          docker run --rm "$IMAGE" -xc '! command -v aws'

@@ -1,17 +1,38 @@
 # Changelog
 
-## [0.5.0](https://github.com/Scalr/runner/tree/0.5.0) (2026-07-01)
+## [ubuntu/0.1.0](https://github.com/Scalr/runner/tree/ubuntu/0.1.0) (2026-08-11)
+
+First release of the Ubuntu-based image family, published as
+`scalr/runner-ubuntu`. Same variants (`full`, `-python39`, `-slim`) and same
+tool set as the Debian family, built from `Dockerfile.ubuntu`.
+
+### Added
+
+- New `scalr/runner-ubuntu:x.y.z`, `:x.y.z-python39` and `:x.y.z-slim` images
+  based on `ubuntu:26.04` (snapshot `sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba`).
 
 ### Changed
-- Updated base image: `debian:trixie-slim` → `ubuntu:26.04` (snapshot `sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba`).
-- Updated CLI tools to latest versions:
-  - `kubectl`: v1.36.1 → 1.36.2
-  - `gcloud`: 569.0.0 → 575.0.0
-  - `aws`: 2.34.53 → 2.35.13
-  - `azure`: 2.86.0 → 2.87.0
-  - `scalr`: 0.17.8 → 0.18.0
 
-[Full Changelog](https://github.com/Scalr/runner/compare/0.4.2...0.5.0)
+- `pebble` is removed from the final image due to security reasons.
+
+## [debian/0.4.3](https://github.com/Scalr/runner/tree/debian/0.4.3) (2026-08-11)
+
+### Changed
+
+- Updated Python: 3.14.5 → 3.14.6
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.36.1 → v1.36.2
+  - `gcloud`: 569.0.0 → 575.0.1
+  - `aws`: 2.34.53 → 2.35.22
+  - `azure`: 2.86.0 → 2.88.0
+- Updated base image: `debian:trixie-slim` snapshot to `sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd`.
+- Release tags are now distro-prefixed (`debian/<x.y.z>`); the prefix is
+  stripped before it is used as the image tag, so `debian/0.4.3` still
+  publishes `scalr/runner:0.4.3`.
+- The Dockerfile moved to `Dockerfile.debian`, and bake targets are namespaced
+  per distro (`debian-full`, `debian-python39`, `debian-slim`).
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.4.2...debian/0.4.3)
 
 ## [0.4.2](https://github.com/Scalr/runner/tree/0.4.2) (2026-06-25)
 

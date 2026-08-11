@@ -11,21 +11,35 @@ remote operations backend of the Scalr platform and [on-prem Scalr Agents](https
   - [Added in the full image](#added-in-the-full-image)
   - [Added in the `-python39` image](#added-in-the--python39-image)
   - [Runtime user](#runtime-user)
-- [Building the Image](#building-the-image)
+- [Building the Images](#building-the-images)
 - [Bumping Versions](#bumping-versions)
 
 ## Image Variants
 
-Three variants are published from this repository:
+Two image families are published from this repository, one per base distro:
 
-- `scalr/runner:<x.y.z>-slim` — slim image: a minimal set of tools.
-- `scalr/runner:<x.y.z>` — full image: the slim set plus cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
-- `scalr/runner:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.14 (for legacy workflows).
+| Family | Base image | Dockerfile | Docker Hub repository |
+| ------ | ---------- | ---------- | --------------------- |
+| Debian | [`debian:trixie-slim`](https://hub.docker.com/_/debian) | [`Dockerfile.debian`](./Dockerfile.debian) | `scalr/runner` |
+| Ubuntu | [`ubuntu:26.04`](https://hub.docker.com/_/ubuntu) | [`Dockerfile.ubuntu`](./Dockerfile.ubuntu) | `scalr/runner-ubuntu` |
 
-Images are based on
-[`debian:trixie-slim`](https://hub.docker.com/_/debian) (pinned by digest in
-[versions.json](./versions.json)) and published as multi-arch manifests for
-`linux/amd64` and `linux/arm64`.
+Each family ships the same three variants (`<repo>` is `scalr/runner` or
+`scalr/runner-ubuntu`):
+
+- `<repo>:<x.y.z>-slim` — slim image: a minimal set of tools.
+- `<repo>:<x.y.z>` — full image: the slim set plus cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
+- `<repo>:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.14 (for legacy workflows).
+
+Base images are pinned by digest in [versions.json](./versions.json), and
+every variant is published as a multi-arch manifest for `linux/amd64` and
+`linux/arm64`.
+
+Releases are driven by git tags carrying the distro as a prefix:
+`debian/<x.y.z>` triggers [release-debian.yaml](./.github/workflows/release-debian.yaml)
+and `ubuntu/<x.y.z>` triggers [release-ubuntu.yaml](./.github/workflows/release-ubuntu.yaml).
+The prefix is stripped before it is used as the image tag, so the tag
+`debian/0.5.0` publishes `scalr/runner:0.5.0`. The two families are versioned
+and released independently.
 
 ## Included Tools
 
@@ -34,9 +48,10 @@ below by the variant they appear in.
 
 ### Base Software
 
-Present in all variants. These come from the pinned Debian Trixie snapshot
-referenced by `DEBIAN_BASE_DIGEST` in [versions.json](./versions.json), so
-their exact versions are whatever that snapshot pins.
+Present in all variants. These come from the pinned base image snapshot
+referenced by `DEBIAN_BASE_DIGEST` / `UBUNTU_BASE_DIGEST` in
+[versions.json](./versions.json), so their exact versions are whatever that
+snapshot pins.
 
 * **Archive tools**:
   * `tar` — manipulate tar archives (from the base image)
@@ -67,10 +82,10 @@ versions below are the current pins (kept in sync with `versions.json` by
 * **Programming language**
   * Python ([v3.14.6](https://www.python.org/downloads/release/python-3146/)) — [standalone CPython build](https://github.com/astral-sh/python-build-standalone) from [astral.sh](https://astral.sh/)
 * **Cloud CLIs**
-  * AWS CLI ([2.35.13](https://github.com/aws/aws-cli/releases/tag/2.35.13)) — Amazon Web Services CLI
+  * AWS CLI ([2.35.22](https://github.com/aws/aws-cli/releases/tag/2.35.22)) — Amazon Web Services CLI
   * AWS Session Manager Plugin — SSM session support for the AWS CLI
-  * Azure CLI ([2.87.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.87.0)) — Microsoft Azure CLI
-  * Google Cloud SDK ([575.0.0](https://cloud.google.com/sdk/docs/release-notes#57500)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
+  * Azure CLI ([2.88.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.88.0)) — Microsoft Azure CLI
+  * Google Cloud SDK ([575.0.1](https://cloud.google.com/sdk/docs/release-notes#57501)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
   * Kubectl ([0.36.2](https://github.com/kubernetes/kubectl/releases/tag/v0.36.2)) — Kubernetes CLI
   * Scalr CLI ([0.18.0](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.0)) — command-line client for the Scalr API
 
@@ -91,19 +106,25 @@ image continues to track the latest gcloud release.
 A non-root user `scalr` with uid/gid `1000` is created in the base layer
 and is therefore present in all variants.
 
-## Building the Image
+## Building the Images
 
 Builds are driven by [`docker-bake.hcl`](./docker-bake.hcl) (targets, tags,
 cache config) and [`versions.json`](./versions.json) (pinned tool versions
 and SHA256 checksums). `versions.json` is a native Docker Buildx Bake
-variable file containing three maps:
+variable file containing four maps:
 
-- `versions_base` — Debian base image and digest (used by every target, including `-slim`)
-- `versions_full` — extra tools layered on top for the full image (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin)
+- `versions_debian` — Debian base image and digest (used by every `debian-*` target, including `-slim`)
+- `versions_ubuntu` — Ubuntu base image and digest (used by every `ubuntu-*` target, including `-slim`)
+- `versions_full` — extra tools layered on top for the full image (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin); shared by both distros
 - `versions_python39` — Python 3.9 overrides merged on top of `versions_full` for the `-python39` image
 
+Bake exposes one target per distro/variant pair — `debian-full`,
+`debian-python39`, `debian-slim`, `ubuntu-full`, `ubuntu-python39`,
+`ubuntu-slim` — plus a `debian` and an `ubuntu` group that builds all three
+variants of that family. The default group builds both families.
+
 Always pass both files. Every download is verified by SHA256 in the
-Dockerfile.
+Dockerfiles.
 
 Tags use `VERSION` from the environment, defaulting to `dev` for local
 builds.
@@ -113,11 +134,23 @@ multi-arch builds. Local builds with Docker's default driver cannot do
 multi-platform, so add `--set "*.platform=linux/amd64"` (or your host arch)
 and `--load` to every local command.
 
-### Build everything
+### Build everything (both distros, all variants)
 
 ```bash
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
   --set "*.platform=linux/amd64" --load
+```
+
+### Build one distro
+
+```bash
+# scalr/runner:dev, :dev-python39, :dev-slim
+VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load debian
+
+# scalr/runner-ubuntu:dev, :dev-python39, :dev-slim
+VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
+  --set "*.platform=linux/amd64" --load ubuntu
 ```
 
 ### Build one variant
@@ -125,15 +158,15 @@ VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
 ```bash
 # scalr/runner:dev
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load full
+  --set "*.platform=linux/amd64" --load debian-full
 
 # scalr/runner:dev-python39
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load python39
+  --set "*.platform=linux/amd64" --load debian-python39
 
-# scalr/runner:dev-slim
+# scalr/runner-ubuntu:dev-slim
 VERSION=dev docker buildx bake -f docker-bake.hcl -f versions.json \
-  --set "*.platform=linux/amd64" --load slim
+  --set "*.platform=linux/amd64" --load ubuntu-slim
 ```
 
 ## Bumping Versions
@@ -145,10 +178,12 @@ To update all tool versions to their latest releases, run:
 ```
 
 This script fetches the latest versions from upstream sources and updates
-the `versions_base`, `versions_full`, and `versions_python39` maps in
-[versions.json](./versions.json) (plus the [Included Tools](#included-tools)
-section of this README). For every tool it also refreshes the per-arch
-SHA256 checksums used by the Dockerfile to verify each download.
+the `versions_debian`, `versions_ubuntu`, `versions_full`, and
+`versions_python39` maps in [versions.json](./versions.json) (plus the
+[Included Tools](#included-tools) section of this README). Both base image
+digests are re-pinned; tool versions are shared by both distros. For every
+tool it also refreshes the per-arch SHA256 checksums used by the Dockerfiles
+to verify each download.
 
 Requirements: `python3` (stdlib only, no `pip install` needed).
 
