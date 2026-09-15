@@ -78,15 +78,23 @@ jobs:
           push: true
           # Append both GAR region tags to each target so a single push writes
           # to Docker Hub (declared in docker-bake.hcl) and both regional GAR
-          # mirrors. Cache uses GitHub Actions cache (per-repo, private) so
+          # mirrors. Both GAR mirrors additionally get a `v`-prefixed alias
+          # (e.g. `v0.4.2`) so GAR cleanup policies can filter release tags
+          # by prefix. Cache uses GitHub Actions cache (per-repo, private) so
           # nothing cache-related leaks into the public Docker Hub repo.
           set: |
             full.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}
+            full.tags+=${{ steps.gar.outputs.image_eu }}:v${{ steps.image_tag.outputs.tag }}
             full.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}
+            full.tags+=${{ steps.gar.outputs.image_us }}:v${{ steps.image_tag.outputs.tag }}
             python39.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-python39
+            python39.tags+=${{ steps.gar.outputs.image_eu }}:v${{ steps.image_tag.outputs.tag }}-python39
             python39.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-python39
+            python39.tags+=${{ steps.gar.outputs.image_us }}:v${{ steps.image_tag.outputs.tag }}-python39
             slim.tags+=${{ steps.gar.outputs.image_eu }}:${{ steps.image_tag.outputs.tag }}-slim
+            slim.tags+=${{ steps.gar.outputs.image_eu }}:v${{ steps.image_tag.outputs.tag }}-slim
             slim.tags+=${{ steps.gar.outputs.image_us }}:${{ steps.image_tag.outputs.tag }}-slim
+            slim.tags+=${{ steps.gar.outputs.image_us }}:v${{ steps.image_tag.outputs.tag }}-slim
             full.cache-from=type=gha,scope=full
             full.cache-to=type=gha,scope=full,mode=max
             python39.cache-from=type=gha,scope=python39
@@ -111,11 +119,17 @@ jobs:
           echo "  ${IMG_EU}:${TAG}"
           echo "  ${IMG_EU}:${TAG}-python39"
           echo "  ${IMG_EU}:${TAG}-slim"
+          echo "  ${IMG_EU}:v${TAG}"
+          echo "  ${IMG_EU}:v${TAG}-python39"
+          echo "  ${IMG_EU}:v${TAG}-slim"
           echo ""
           echo "GAR — US prod:"
           echo "  ${IMG_US}:${TAG}"
           echo "  ${IMG_US}:${TAG}-python39"
           echo "  ${IMG_US}:${TAG}-slim"
+          echo "  ${IMG_US}:v${TAG}"
+          echo "  ${IMG_US}:v${TAG}-python39"
+          echo "  ${IMG_US}:v${TAG}-slim"
           {
             echo "## Published runner images — \`${TAG}\`"
             echo ""
@@ -130,12 +144,18 @@ jobs:
             echo "- \`${IMG_EU}:${TAG}\`"
             echo "- \`${IMG_EU}:${TAG}-python39\`"
             echo "- \`${IMG_EU}:${TAG}-slim\`"
+            echo "- \`${IMG_EU}:v${TAG}\`"
+            echo "- \`${IMG_EU}:v${TAG}-python39\`"
+            echo "- \`${IMG_EU}:v${TAG}-slim\`"
             echo ""
             echo "**GAR — US prod**"
             echo ""
             echo "- \`${IMG_US}:${TAG}\`"
             echo "- \`${IMG_US}:${TAG}-python39\`"
             echo "- \`${IMG_US}:${TAG}-slim\`"
+            echo "- \`${IMG_US}:v${TAG}\`"
+            echo "- \`${IMG_US}:v${TAG}-python39\`"
+            echo "- \`${IMG_US}:v${TAG}-slim\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
   update_changelog:
