@@ -4,7 +4,7 @@ name: Build and Release Runner Image (EU dev GAR)
 # builds of all three variants to the EU dev GAR mirror only — Docker
 # Hub and the US production mirror are never touched here (production
 # is reserved for the release.yaml workflow).
-#
+
 # Tags are derived from the PR source branch, lower-cased and prefixed
 # with `branch-` so they cannot collide with the semver release tags
 # produced by release.yaml. Example: branch `0.2.0` → `branch-0.2.0`,
