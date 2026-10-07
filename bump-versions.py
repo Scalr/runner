@@ -225,8 +225,8 @@ def _latest_python_version(series: str) -> tuple[str, str]:
     return "", ""
 
 
-def get_ubuntu_base_digest(image_ref: str) -> str:
-    """Resolve a Docker Hub image reference (e.g. "ubuntu:26.04") to
+def get_debian_base_digest(image_ref: str) -> str:
+    """Resolve a Docker Hub image reference (e.g. "debian:trixie-slim") to
     its current manifest digest. Uses Docker Hub's anonymous v2 registry API.
     """
     name, _, tag = image_ref.partition(":")
@@ -385,18 +385,18 @@ def main() -> int:
     base = read_versions(SECTION_BASE)
     changes: list[tuple[str, str, str]] = []
 
-    # UBUNTU_BASE_IMAGE is read-only here — the base image (e.g. ubuntu:26.04)
+    # DEBIAN_BASE_IMAGE is read-only here — the base image (e.g. debian:trixie-slim)
     # is a deliberate human choice and must not be auto-bumped. We only refresh the
     # digest pinning for whatever image is currently configured.
-    ubuntu_image = base.get("UBUNTU_BASE_IMAGE", "")
-    if not ubuntu_image:
-        log.error(f"UBUNTU_BASE_IMAGE missing from {VERSIONS_FILE} ({SECTION_BASE})")
+    debian_image = base.get("DEBIAN_BASE_IMAGE", "")
+    if not debian_image:
+        log.error(f"DEBIAN_BASE_IMAGE missing from {VERSIONS_FILE} ({SECTION_BASE})")
         return 1
     bump(
-        "ubuntu_base_digest",
-        "UBUNTU_BASE_DIGEST",
-        get_ubuntu_base_digest(ubuntu_image),
-        base.get("UBUNTU_BASE_DIGEST", ""),
+        "debian_base_digest",
+        "DEBIAN_BASE_DIGEST",
+        get_debian_base_digest(debian_image),
+        base.get("DEBIAN_BASE_DIGEST", ""),
         changes,
         section=SECTION_BASE,
     )
