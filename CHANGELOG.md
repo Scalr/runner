@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0](https://github.com/Scalr/runner/tree/0.6.0) (Unreleased)
+## [0.5.1](https://github.com/Scalr/runner/tree/0.5.1) (Unreleased)
 
 ### Changed
 - Updated Python: 3.14.6 → 3.14.8
@@ -11,7 +11,7 @@
   - `aws`: 2.35.13 → 2.37.10
   - `azure`: 2.87.0 → 2.91.0
 
-[Full Changelog](https://github.com/Scalr/runner/compare/0.5.0...0.6.0)
+[Full Changelog](https://github.com/Scalr/runner/compare/0.5.0...0.5.1)
 
 ## [0.5.0](https://github.com/Scalr/runner/tree/0.5.0) (2026-07-01)
 
