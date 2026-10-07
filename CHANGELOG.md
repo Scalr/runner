@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/Scalr/runner/tree/0.6.0) (Unreleased)
+
+### Changed
+- Updated Python: 3.14.6 → 3.14.8
+- Updated base image: `ubuntu:26.04` snapshot to `sha256:f144425ff09be612d6d9ad965196e9cdc23dae1f42110a8a11a3e9a8198759f7`.
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.36.2 → v1.37.1
+  - `gcloud`: 575.0.0 → 588.0.0
+  - `aws`: 2.35.13 → 2.37.10
+  - `azure`: 2.87.0 → 2.91.0
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.5.0...0.6.0)
+
 ## [0.5.0](https://github.com/Scalr/runner/tree/0.5.0) (2026-07-01)
 
 ### Changed
