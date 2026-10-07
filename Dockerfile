@@ -22,15 +22,15 @@ FROM golang:tip-bookworm AS git-lfs-build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
-ARG GIT_LFS_VERSION=v3.7.1
+ARG GIT_LFS_VERSION=v3.8.0
 
 RUN <<EOT
   git clone --depth 1 --branch "${GIT_LFS_VERSION}" https://github.com/git-lfs/git-lfs.git /git-lfs
   cd /git-lfs
   GOFLAGS=-mod=mod go get \
-    golang.org/x/crypto@v0.52.0 \
-    golang.org/x/net@v0.55.0 \
-    golang.org/x/sys@v0.45.0
+    golang.org/x/crypto@v0.57.0 \
+    golang.org/x/net@v0.59.0 \
+    golang.org/x/sys@v0.48.0
   go mod tidy
   CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w -X github.com/git-lfs/git-lfs/v3/config.GitCommit=$(git rev-parse --short HEAD)" \

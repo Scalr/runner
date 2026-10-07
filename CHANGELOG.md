@@ -10,6 +10,8 @@
   - `gcloud`: 575.0.0 → 588.0.0
   - `aws`: 2.35.13 → 2.37.10
   - `azure`: 2.87.0 → 2.91.0
+  - `session-manager-plugin`: 1.2.814.0 → 1.2.835.0
+  - `git-lfs`: v3.7.1 → v3.8.0 (patched `golang.org/x/crypto` v0.57.0, `golang.org/x/net` v0.59.0, `golang.org/x/sys` v0.48.0)
 
 [Full Changelog](https://github.com/Scalr/runner/compare/0.5.0...0.6.0)
 
