@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.3](https://github.com/Scalr/runner/tree/0.4.3) (Unreleased)
+
+### Changed
+- Updated Python: 3.14.5 → 3.14.8
+- Updated base image: `debian:trixie-slim` snapshot to `sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f`.
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.36.1 → v1.37.1
+  - `gcloud`: 569.0.0 → 588.0.0
+  - `aws`: 2.34.53 → 2.37.10
+  - `azure`: 2.86.0 → 2.91.0
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.4.2...0.4.3)
+
+## [0.4.2](https://github.com/Scalr/runner/tree/0.4.2) (2026-06-25)
+
+### Changed
+- `git-lfs`: use custom-built binary with patched Go dependencies.
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.4.0...0.4.2)
+
 ## [0.4.0](https://github.com/Scalr/runner/tree/0.4.0) (2026-05-26)
 
 ### Added
