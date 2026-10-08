@@ -62,7 +62,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Format Image Tag
+      - name: Format image tag
         id: image_tag
         run: |
           echo "tag=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_OUTPUT
@@ -204,7 +204,7 @@ jobs:
         with:
           ruby-version: "3.3"
 
-      - name: Install Changelog Generator
+      - name: Install changelog generator
         run: gem install github_changelog_generator
 
       - name: Update CHANGELOG.md
