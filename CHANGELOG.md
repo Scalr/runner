@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0](https://github.com/Scalr/runner/tree/0.6.0) (Unreleased)
+## [0.6.0](https://github.com/Scalr/runner/tree/0.6.0) (2026-10-08)
 
 ### Changed
 - Updated Python: 3.14.6 → 3.14.8
