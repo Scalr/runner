@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0](https://github.com/Scalr/runner/tree/0.6.0) (Unreleased)
+
+### Changed
+- Updated Python: 3.14.6 → 3.14.8
+- Reverted base image: `ubuntu:26.04` → `debian:trixie-slim` (snapshot `sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f`).
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.36.2 → v1.37.1
+  - `gcloud`: 575.0.0 → 588.0.0
+  - `aws`: 2.35.13 → 2.37.10
+  - `azure`: 2.87.0 → 2.91.0
+  - `session-manager-plugin`: 1.2.814.0 → 1.2.835.0
+  - `git-lfs`: v3.7.1 → v3.8.0 (patched `golang.org/x/crypto` v0.57.0, `golang.org/x/net` v0.59.0, `golang.org/x/sys` v0.48.0)
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.5.0...0.6.0)
+
 ## [0.5.0](https://github.com/Scalr/runner/tree/0.5.0) (2026-07-01)
 
 ### Changed

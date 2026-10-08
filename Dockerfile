@@ -9,12 +9,12 @@
 #   - full: slim + Python + cloud CLIs + hardening (published as scalr/runner:<x.y.z>
 #           and scalr/runner:<x.y.z>-python39)
 #
-# UBUNTU_BASE_IMAGE, UBUNTU_BASE_DIGEST and other ARGs are supplied at build
+# DEBIAN_BASE_IMAGE, DEBIAN_BASE_DIGEST and other ARGs are supplied at build
 # time via bake (see docker-bake.hcl + versions.json). The skip directive
 # above silences BuildKit's check for ARGs in FROM without a default.
 
-ARG UBUNTU_BASE_IMAGE
-ARG UBUNTU_BASE_DIGEST
+ARG DEBIAN_BASE_IMAGE
+ARG DEBIAN_BASE_DIGEST
 
 # Custom git-lfs build, we rely on Wolfi's approach from
 # https://github.com/wolfi-dev/os/blob/main/git-lfs.yaml
@@ -22,22 +22,22 @@ FROM golang:tip-bookworm AS git-lfs-build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
-ARG GIT_LFS_VERSION=v3.7.1
+ARG GIT_LFS_VERSION=v3.8.0
 
 RUN <<EOT
   git clone --depth 1 --branch "${GIT_LFS_VERSION}" https://github.com/git-lfs/git-lfs.git /git-lfs
   cd /git-lfs
   GOFLAGS=-mod=mod go get \
-    golang.org/x/crypto@v0.52.0 \
-    golang.org/x/net@v0.55.0 \
-    golang.org/x/sys@v0.45.0
+    golang.org/x/crypto@v0.57.0 \
+    golang.org/x/net@v0.59.0 \
+    golang.org/x/sys@v0.48.0
   go mod tidy
   CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w -X github.com/git-lfs/git-lfs/v3/config.GitCommit=$(git rev-parse --short HEAD)" \
     -o /out/git-lfs .
 EOT
 
-FROM ${UBUNTU_BASE_IMAGE}@${UBUNTU_BASE_DIGEST} AS base-slim
+FROM ${DEBIAN_BASE_IMAGE}@${DEBIAN_BASE_DIGEST} AS base-slim
 
 ARG TARGETARCH
 
@@ -65,10 +65,7 @@ COPY --from=git-lfs-build /out/git-lfs /usr/bin/git-lfs
 
 # Non-root user available in every variant (optional; used when the container
 # runs with --user 1000). Created before hardening removes useradd.
-RUN <<EOT
-  userdel -r ubuntu
-  useradd -u 1000 -m scalr
-EOT
+RUN useradd -u 1000 -m scalr
 
 # Security hardening: strip privilege-escalation surface inherited from the base image.
 # Must run last so it cannot be undone by a later layer.
@@ -91,9 +88,6 @@ RUN <<EOT
     /bin/umount /usr/bin/umount
   # Strip SUID/SGID bits from every remaining file (defense-in-depth).
   find / -xdev \( -perm -4000 -o -perm -2000 \) -type f -exec chmod a-s {} + 2>/dev/null || true
-  # Remove unnecesary files for final build
-  rm -rf \
-    /usr/bin/pebble
 EOT
 
 FROM scratch AS slim
