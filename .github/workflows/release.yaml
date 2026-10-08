@@ -6,8 +6,7 @@ on:
       - "*.*.*"
 
 permissions:
-  # Needed by the update_changelog job to git-push CHANGELOG.md back to main.
-  contents: write
+  contents: read
   # Required by google-github-actions/auth for workload identity federation.
   id-token: write
 
@@ -189,35 +188,3 @@ jobs:
             echo "- \`${IMG_US_PROD}:v${TAG}-python39\`"
             echo "- \`${IMG_US_PROD}:v${TAG}-slim\`"
           } >> "$GITHUB_STEP_SUMMARY"
-
-  update_changelog:
-    name: Update Changelog
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Install changelog generator
-        run: gem install github_changelog_generator
-
-      - name: Update CHANGELOG.md
-        env:
-          CHANGELOG_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          github_changelog_generator -u Scalr -p runner --output CHANGELOG.md
-          git add CHANGELOG.md
-          if [ ! -n "$(git status -s)" ]; then
-            echo "NOTHING TO COMMIT"
-          else
-            git config user.name "${GITHUB_ACTOR}"
-            git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-            git commit -m "Update CHANGELOG.md"
-            git push --no-verify
-          fi

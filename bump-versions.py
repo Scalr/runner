@@ -21,8 +21,8 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 VERSIONS_FILE = Path("versions.json")
 README_FILE = Path("README.md")
@@ -111,7 +111,9 @@ def read_versions(section: str = SECTION_DEFAULT) -> dict[str, str]:
 def write_value(key: str, value: str, section: str = SECTION_DEFAULT) -> None:
     """Update or append KEY in the given top-level variable and rewrite the file."""
     data = _load()
-    data.setdefault("variable", {}).setdefault(section, {}).setdefault("default", {})[key] = value
+    data.setdefault("variable", {}).setdefault(section, {}).setdefault("default", {})[
+        key
+    ] = value
     _dump(data)
 
 
@@ -279,7 +281,9 @@ def refresh_kubectl_shas(version: str) -> None:
     )
 
 
-def refresh_python_shas(version: str, release: str, section: str = SECTION_DEFAULT) -> None:
+def refresh_python_shas(
+    version: str, release: str, section: str = SECTION_DEFAULT
+) -> None:
     sums = (
         "https://github.com/astral-sh/python-build-standalone/releases/download/"
         f"{release}/SHA256SUMS"
@@ -475,7 +479,9 @@ def main() -> int:
     cur_r39 = vs39.get("PYTHON_RELEASE", "")
     lat_v39, lat_r39 = get_latest_python39_info()
     if not (lat_v39 and lat_r39):
-        log.warning("python39: no 3.9 build found in recent python-build-standalone releases; skipping")
+        log.warning(
+            "python39: no 3.9 build found in recent python-build-standalone releases; skipping"
+        )
     else:
         py39_changed = False
         if cur_v39 != lat_v39:
