@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.1](https://github.com/Scalr/runner/tree/0.6.1) (Unreleased)
+
+### Changed
+- Updated base image: `debian:trixie-slim` snapshot to `sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad`.
+- Updated CLI tools to latest versions:
+  - `gcloud`: 588.0.0 → 590.0.0
+  - `aws`: 2.37.10 → 2.38.4
+  - `scalr`: 0.18.0 → 0.18.1
+  - `session-manager-plugin`: 1.2.835.0 → 1.2.896.0
+
+### Security
+- `git-lfs`: v3.8.0 rebuilt with patched `golang.org/x/net` v0.61.0, `golang.org/x/crypto` v0.58.0 and `golang.org/x/sys` v0.49.0. The `x/net` update fixes HTTP/2 vulnerabilities CVE-2026-78659, CVE-2026-78660, CVE-2026-78663, CVE-2026-78669 and CVE-2026-97032.
+- Updated Python: 3.14.8 → 3.14.9. This is an expedited security release. It bundles pip 26.2.2 with certifi 2026.10.19 for the eMudhra / emSign CA certificate incident. It also bundles libexpat 2.9.0 and fixes the `tarfile` link extraction filter (gh-157265) and a `tempfile.TemporaryDirectory` cleanup race (gh-157579).
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.6.0...0.6.1)
+
 ## [0.6.0](https://github.com/Scalr/runner/tree/0.6.0) (2026-10-08)
 
 ### Changed
