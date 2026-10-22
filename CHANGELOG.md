@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.1](https://github.com/Scalr/runner/tree/0.6.1) (Unreleased)
+## [0.6.1](https://github.com/Scalr/runner/tree/0.6.1) (2026-10-22)
 
 ### Changed
 - Updated base image: `debian:trixie-slim` snapshot to `sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad`.
