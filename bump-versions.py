@@ -4,9 +4,7 @@
 For every tool that has a discoverable upstream version index, this script
 fetches the latest release, updates the VERSIONS / VERSIONS_PY39 maps in
 versions.json (a Docker Buildx Bake variable file), and refreshes the
-per-arch SHA256 checksums the Dockerfile uses to verify each download. The
-AWS Session Manager Plugin version stays manually pinned (no upstream
-version index) but its SHAs are still refreshed against the pinned version.
+per-arch SHA256 checksums the Dockerfile uses to verify each download.
 
 Stdlib only — no pip dependencies.
 """
@@ -204,6 +202,15 @@ def get_latest_azure_cli() -> str:
 def get_latest_scalr_cli() -> str:
     rel = http_get_json("https://api.github.com/repos/Scalr/scalr-cli/releases/latest")
     return rel["tag_name"].removeprefix("v")
+
+
+def get_latest_aws_ssm_plugin() -> str:
+    # Use the latest GitHub release, not the VERSION file on mainline — it is
+    # bumped before the release is published to S3.
+    rel = http_get_json(
+        "https://api.github.com/repos/aws/session-manager-plugin/releases/latest"
+    )
+    return rel["tag_name"]
 
 
 def _latest_python_version(series: str) -> tuple[str, str]:
@@ -501,14 +508,14 @@ def main() -> int:
         if py39_changed:
             refresh_python_shas(lat_v39, lat_r39, SECTION_PY39)
 
-    # AWS SSM Plugin: version is manually pinned (no upstream version index),
-    # but its SHAs are refreshed in case the pinned version was hand-edited.
-    cur_ssm = vs.get("AWS_SSM_PLUGIN_VERSION", "")
-    if cur_ssm:
-        log.info(f"aws_ssm_plugin: {cur_ssm} (manually pinned; refreshing SHAs)")
-        refresh_aws_ssm_plugin_shas(cur_ssm)
-    else:
-        log.warning(f"aws_ssm_plugin: no version pinned in {VERSIONS_FILE}")
+    bump(
+        "aws_ssm_plugin",
+        "AWS_SSM_PLUGIN_VERSION",
+        get_latest_aws_ssm_plugin(),
+        vs.get("AWS_SSM_PLUGIN_VERSION", ""),
+        changes,
+        refresh_aws_ssm_plugin_shas,
+    )
 
     if changes:
         log.info("Summary of changes:")
