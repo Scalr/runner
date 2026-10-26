@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/Scalr/runner/tree/0.6.2) (Unreleased)
+
+### Security
+- Updated `libbrotli1`: 1.1.0-2+b7 → 1.1.0-2+deb13u1. This fixes the Brotli decoder buffer overflow CVE-2026-111497 (DSA-6582-1). `curl` and `git` use this library for HTTPS downloads.
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.6.1...0.6.2)
+
 ## [0.6.1](https://github.com/Scalr/runner/tree/0.6.1) (2026-10-22)
 
 ### Changed

@@ -60,6 +60,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # Older buildx accepts `--set *.no-cache-filter` but ignores it.
+          version: v0.38.1
 
       - name: Format image tag
         id: image_tag
@@ -89,6 +92,8 @@ jobs:
           # (e.g. `v0.4.2`) so GAR cleanup policies can filter release tags
           # by prefix. Cache uses GitHub Actions cache (per-repo, private) so
           # nothing cache-related leaks into the public Docker Hub repo.
+          # base-slim always rebuilds: its apt packages are not pinned, so a cached
+          # layer would ship the Debian security updates of an older build.
           set: |
             full.tags+=${{ steps.gar.outputs.image_eu_dev }}:${{ steps.image_tag.outputs.tag }}
             full.tags+=${{ steps.gar.outputs.image_eu_dev }}:v${{ steps.image_tag.outputs.tag }}
@@ -114,6 +119,7 @@ jobs:
             python39.cache-to=type=gha,scope=python39,mode=max
             slim.cache-from=type=gha,scope=slim
             slim.cache-to=type=gha,scope=slim,mode=max
+            *.no-cache-filter=base-slim
 
       - name: Report published images
         env:
