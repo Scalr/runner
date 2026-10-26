@@ -60,6 +60,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # Older buildx accepts `--set *.no-cache-filter` but ignores it.
+          version: v0.38.1
 
       - name: Format image tag
         id: image_tag
