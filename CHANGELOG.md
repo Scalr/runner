@@ -8,8 +8,8 @@
   - `aws`: 2.38.4 → 2.38.6
 
 ### Security
-- Updated Python: 3.14.9 → 3.14.10 (python-build-standalone 20261026). This release fixes CVE-2026-114583 in `tarfile.tar_filter()` and CVE-2026-115557 in `ssl`. `ssl` now rejects certificate chains that use the compromised eMudhra intermediate CA keys. `http.cookiejar` now ignores cookies that have a negative `Version` attribute (gh-160300).
-- Updated `git-lfs`: v3.8.0 → v3.8.1. This release fixes CVE-2026-69260, CVE-2026-69261, CVE-2026-105802 and CVE-2026-105803. The binary is still built with patched `golang.org/x/net` v0.61.0, `golang.org/x/crypto` v0.58.0 and `golang.org/x/sys` v0.49.0.
+- Updated Python: 3.14.9 → 3.14.10. This release fixes [CVE-2026-114583](https://www.cve.org/CVERecord?id=CVE-2026-114583) in `tarfile.tar_filter()` and [CVE-2026-115557](https://www.cve.org/CVERecord?id=CVE-2026-115557) in `ssl`. `ssl` now rejects certificate chains that use the compromised eMudhra intermediate CA keys. `http.cookiejar` now ignores cookies that have a negative `Version` attribute (gh-160300).
+- Updated `git-lfs`: v3.8.0 → v3.8.1. This release fixes [CVE-2026-69260](https://www.cve.org/CVERecord?id=CVE-2026-69260), [CVE-2026-69261](https://www.cve.org/CVERecord?id=CVE-2026-69261), [CVE-2026-105802](https://www.cve.org/CVERecord?id=CVE-2026-105802) and [CVE-2026-105803](https://www.cve.org/CVERecord?id=CVE-2026-105803).
 
 [Full Changelog](https://github.com/Scalr/runner/compare/0.6.2...0.6.3)
 
