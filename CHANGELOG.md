@@ -1,4 +1,4 @@
-чи# Changelog
+# Changelog
 
 ## [0.6.4](https://github.com/Scalr/runner/tree/0.6.4) (Unreleased)
 
