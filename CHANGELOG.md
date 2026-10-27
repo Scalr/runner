@@ -1,4 +1,11 @@
-# Changelog
+чи# Changelog
+
+## [0.6.4](https://github.com/Scalr/runner/tree/0.6.4) (Unreleased)
+
+### Security
+- Updated `certifi` in the Azure CLI environment (`/opt/az`): 2024.7.4 → 2026.10.23. Updated `pip` there: 26.2.1 → 26.2.2, which vendors the same certifi. Both trusted the compromised eMudhra `emSign ECC Root CA - G3`. Python and the OS CA bundle were not affected. Full image only: `slim` has no Azure CLI.
+
+[Full Changelog](https://github.com/Scalr/runner/compare/0.6.3...0.6.4)
 
 ## [0.6.3](https://github.com/Scalr/runner/tree/0.6.3) (2026-10-27)
 
