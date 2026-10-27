@@ -22,7 +22,7 @@ FROM golang:tip-bookworm AS git-lfs-build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
-ARG GIT_LFS_VERSION=v3.8.0
+ARG GIT_LFS_VERSION=v3.8.1
 
 RUN <<EOT
   git clone --depth 1 --branch "${GIT_LFS_VERSION}" https://github.com/git-lfs/git-lfs.git /git-lfs

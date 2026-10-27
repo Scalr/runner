@@ -65,12 +65,12 @@ versions below are the current pins (kept in sync with `versions.json` by
 `bump-versions.py`):
 
 * **Programming language**
-  * Python ([v3.14.9](https://www.python.org/downloads/release/python-3149/)) — [standalone CPython build](https://github.com/astral-sh/python-build-standalone) from [astral.sh](https://astral.sh/)
+  * Python ([v3.14.10](https://www.python.org/downloads/release/python-31410/)) — [standalone CPython build](https://github.com/astral-sh/python-build-standalone) from [astral.sh](https://astral.sh/)
 * **Cloud CLIs**
-  * AWS CLI ([2.38.4](https://github.com/aws/aws-cli/releases/tag/2.38.4)) — Amazon Web Services CLI
+  * AWS CLI ([2.38.6](https://github.com/aws/aws-cli/releases/tag/2.38.6)) — Amazon Web Services CLI
   * AWS Session Manager Plugin — SSM session support for the AWS CLI
   * Azure CLI ([2.91.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.91.0)) — Microsoft Azure CLI
-  * Google Cloud SDK ([590.0.0](https://cloud.google.com/sdk/docs/release-notes#59000)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
+  * Google Cloud SDK ([590.0.1](https://cloud.google.com/sdk/docs/release-notes#59001)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
   * Kubectl ([0.37.1](https://github.com/kubernetes/kubectl/releases/tag/v0.37.1)) — Kubernetes CLI
   * Scalr CLI ([0.18.1](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.1)) — command-line client for the Scalr API
 
