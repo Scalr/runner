@@ -21,6 +21,7 @@ Describe the effect on users.
 - List CLI upgrades under `Updated CLI tools to latest versions:` as nested bullets.
 - Include the image reference and pinned snapshot digest for base image changes.
 - For patched or custom-built dependencies, name what was patched and the patched versions.
+- Link each CVE ID to its cve.org record: `[CVE-YYYY-NNNNN](https://www.cve.org/CVERecord?id=CVE-YYYY-NNNNN)`.
 
 ## Release
 
