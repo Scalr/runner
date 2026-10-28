@@ -225,6 +225,11 @@ Architectures: $(dpkg --print-architecture)
 Signed-by: /etc/apt/keyrings/microsoft.gpg" | tee /etc/apt/sources.list.d/azure-cli.sources
   apt-get update
   apt-get install -y --no-install-recommends "azure-cli=${AZURE_CLI_VERSION}-1~${AZ_DIST}"
+  # The package ships its own venv with a stale certifi and a pip that vendors another one.
+  # Both trust the compromised emSign ECC Root CA - G3.
+  # Azure CLI fixed certifi in https://github.com/Azure/azure-cli/pull/34250 (release 2.92.0).
+  # Check the venv after upgrading, then remove what the package already fixes.
+  /opt/az/bin/python3 -m pip install --no-cache-dir certifi==2026.10.23 pip==26.2.2
   # Cleanup
   apt-get clean
   apt-get autoremove -y
