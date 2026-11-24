@@ -29,9 +29,9 @@ The git tag sets the version. Use `X.Y.Z` without a `v` prefix.
 
 1. Merge release changes into `main`. Add required changelog entries under `(Unreleased)`.
 2. Open a PR to replace `Unreleased` with today's date (`YYYY-MM-DD`). Check that the heading and compare link match the release version.
-3. After the PR merges, tag its merge commit on `main` and push the tag: `git tag X.Y.Z <merge-commit>` and `git push origin X.Y.Z`.
+3. After the PR merges, run [release.yaml](.github/workflows/release.yaml) on `main`: `gh workflow run release.yaml --repo Scalr/runner --ref main -f version=X.Y.Z`.
 
-The tag runs [release.yaml](.github/workflows/release.yaml) to publish all variants to Docker Hub and GAR mirrors. GAR also gets `v`-prefixed aliases.
+The workflow checks that the top changelog section is `X.Y.Z` with a date and a compare link from an existing tag. Then it tags the current `main` commit with `X.Y.Z` and publishes all variants to Docker Hub and GAR mirrors. GAR also gets `v`-prefixed aliases. Do not push release tags manually: a pushed tag does not start a release.
 
 ## Markdown Style
 

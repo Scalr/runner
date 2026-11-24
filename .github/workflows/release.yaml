@@ -1,19 +1,109 @@
 name: Release Runner Image
+run-name: Release ${{ inputs.version }} ${{ inputs.correlation_id }}
 
+# Run on main after the PR that dates the CHANGELOG section merges. The workflow tags
+# the commit it runs on, so the tag and the images always come from the same commit.
 on:
-  push:
-    tags:
-      - "*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Runner version without a `v` prefix (e.g. `0.6.5`).
+        required: true
+        type: string
+      correlation_id:
+        description: Set by the release-management orchestrator to find this run.
+        required: false
+        type: string
 
 permissions:
   contents: read
-  # Required by google-github-actions/auth for workload identity federation.
-  id-token: write
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
 
 jobs:
+  tag:
+    name: Check and Tag
+    runs-on: ubuntu-latest
+    permissions:
+      # Push the release tag.
+      contents: write
+    steps:
+      - name: Check Ref and Version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Run the workflow on main, got ${GITHUB_REF}"
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must be X.Y.Z without a v prefix, got '${VERSION}'"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check CHANGELOG
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          heading=$(grep -m1 '^## \[' CHANGELOG.md || true)
+          prefix="## [${VERSION}](https://github.com/Scalr/runner/tree/${VERSION}) ("
+          if [[ "$heading" != "$prefix"* ]]; then
+            echo "::error::The top CHANGELOG section must be ${VERSION}, got '${heading}'"
+            exit 1
+          fi
+
+          release_date="${heading#"$prefix"}"
+          release_date="${release_date%)}"
+          if [[ ! "$release_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::The ${VERSION} section has no release date, got '${release_date}'. Merge a PR that replaces Unreleased with the date first."
+            exit 1
+          fi
+
+          section=$(awk '/^## \[/ { n++ } n == 1' CHANGELOG.md)
+          compare=$(grep -m1 -oE '^\[Full Changelog\]\(https://github\.com/Scalr/runner/compare/[^)]+\)$' <<< "$section" || true)
+          previous=$(sed -nE "s|^\[Full Changelog\]\(https://github\.com/Scalr/runner/compare/([0-9]+\.[0-9]+\.[0-9]+)\.\.\.${VERSION//./\\.}\)$|\1|p" <<< "$compare")
+          if [[ -z "$previous" ]]; then
+            echo "::error::The ${VERSION} section must end with a compare link <previous>...${VERSION}, got '${compare}'"
+            exit 1
+          fi
+          if ! git ls-remote --exit-code --tags origin "refs/tags/${previous}" > /dev/null; then
+            echo "::error::The compare link starts at ${previous}, but this tag does not exist"
+            exit 1
+          fi
+          echo "CHANGELOG ${VERSION} (${release_date}), compare from ${previous}"
+
+      # A re-run after a failed build finds the tag on the same commit and continues
+      - name: Create and Push Tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if remote_sha=$(git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" | cut -f1); then
+            if [[ "$remote_sha" == "$GITHUB_SHA" ]]; then
+              echo "Tag ${VERSION} already points to ${GITHUB_SHA}"
+              exit 0
+            fi
+            echo "::error::Tag ${VERSION} already exists on ${remote_sha}"
+            exit 1
+          fi
+          git tag "$VERSION" "$GITHUB_SHA"
+          git push origin "refs/tags/${VERSION}"
+
   build:
     name: Build and Push
+    needs: [tag]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required by google-github-actions/auth for workload identity federation.
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,8 +156,10 @@ jobs:
 
       - name: Format image tag
         id: image_tag
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          echo "tag=${GITHUB_REF#refs/tags/}" | tee -a $GITHUB_OUTPUT
+          echo "tag=${VERSION}" | tee -a $GITHUB_OUTPUT
 
       # Three GAR mirrors — EU dev, EU stage and US production.
       - name: Compose GAR image paths
