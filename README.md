@@ -19,8 +19,8 @@ remote operations backend of the Scalr platform and [on-prem Scalr Agents](https
 Three variants are published from this repository:
 
 - `scalr/runner:<x.y.z>-slim` — slim image: a minimal set of tools.
-- `scalr/runner:<x.y.z>` — full image: the slim set plus cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.14.
-- `scalr/runner:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.14 (for legacy workflows).
+- `scalr/runner:<x.y.z>` — full image: the slim set plus cloud CLIs (AWS, Azure, gcloud, kubectl, scalr-cli) and Python 3.15.
+- `scalr/runner:<x.y.z>-python39` — same as the full image, but with Python 3.9 instead of 3.15 (for legacy workflows).
 
 Images are based on
 [`debian:trixie-slim`](https://hub.docker.com/_/debian) (pinned by digest in
@@ -65,25 +65,25 @@ versions below are the current pins (kept in sync with `versions.json` by
 `bump-versions.py`):
 
 * **Programming language**
-  * Python ([v3.14.10](https://www.python.org/downloads/release/python-31410/)) — [standalone CPython build](https://github.com/astral-sh/python-build-standalone) from [astral.sh](https://astral.sh/)
+  * Python ([v3.15.2](https://www.python.org/downloads/release/python-3152/)) — [standalone CPython build](https://github.com/astral-sh/python-build-standalone) from [astral.sh](https://astral.sh/)
 * **Cloud CLIs**
-  * AWS CLI ([2.38.6](https://github.com/aws/aws-cli/releases/tag/2.38.6)) — Amazon Web Services CLI
+  * AWS CLI ([2.42.4](https://github.com/aws/aws-cli/releases/tag/2.42.4)) — Amazon Web Services CLI
   * AWS Session Manager Plugin — SSM session support for the AWS CLI
-  * Azure CLI ([2.91.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.91.0)) — Microsoft Azure CLI
-  * Google Cloud SDK ([590.0.1](https://cloud.google.com/sdk/docs/release-notes#59001)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
-  * Kubectl ([0.37.1](https://github.com/kubernetes/kubectl/releases/tag/v0.37.1)) — Kubernetes CLI
+  * Azure CLI ([2.93.0](https://github.com/Azure/azure-cli/releases/tag/azure-cli-2.93.0)) — Microsoft Azure CLI
+  * Google Cloud SDK ([594.0.1](https://cloud.google.com/sdk/docs/release-notes#59401)) — `gcloud` with `alpha`, `beta`, and `gke-gcloud-auth-plugin` components
+  * Kubectl ([0.37.3](https://github.com/kubernetes/kubectl/releases/tag/v0.37.3)) — Kubernetes CLI
   * Scalr CLI ([0.18.1](https://github.com/Scalr/scalr-cli/releases/tag/v0.18.1)) — command-line client for the Scalr API
 
 ### Added in the `-python39` image
 
-Same as the full image, with Python 3.14 replaced by Python 3.9 (currently
+Same as the full image, with Python 3.15 replaced by Python 3.9 (currently
 [v3.9.25](https://www.python.org/downloads/release/python-3925/)).
 
 **Google Cloud SDK pin.** Newer `gcloud` releases dropped Python 3.9
 support, so the SDK is pinned to `564.0.0` (the last version that still
 works on Python 3.9) via the `versions_python39` map. `bump-versions.py`
 does not auto-bump this pin — if you ever change it, recompute the
-per-arch SHA256s for the new version by hand. The full (Python 3.14)
+per-arch SHA256s for the new version by hand. The full (Python 3.15)
 image continues to track the latest gcloud release.
 
 ### Runtime user
@@ -99,7 +99,7 @@ and SHA256 checksums). `versions.json` is a native Docker Buildx Bake
 variable file containing three maps:
 
 - `versions_base` — Debian base image and digest (used by every target, including `-slim`)
-- `versions_full` — extra tools layered on top for the full image (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.14, AWS SSM Plugin)
+- `versions_full` — extra tools layered on top for the full image (kubectl, gcloud, AWS CLI, Azure CLI, Scalr CLI, Python 3.15, AWS SSM Plugin)
 - `versions_python39` — Python 3.9 overrides merged on top of `versions_full` for the `-python39` image
 
 Always pass both files. Every download is verified by SHA256 in the
