@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.7.0](https://github.com/Scalr/runner/tree/0.7.0) (2026-11-27)
 
 ### Changed
 - Updated Python: 3.14.10 → 3.15.2 in the full image. Packages that user scripts installed for Python 3.14 must be reinstalled for 3.15.
