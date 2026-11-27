@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0](https://github.com/Scalr/runner/tree/0.7.0) (2026-11-27)
+
+### Changed
+- Updated Python: 3.14.10 → 3.15.2 in the full image. Packages that user scripts installed for Python 3.14 must be reinstalled for 3.15.
+- Updated base image: `debian:trixie-slim` snapshot to `sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0`.
+- Updated CLI tools to latest versions:
+  - `kubectl`: v1.37.1 → v1.37.3
+  - `gcloud`: 590.0.1 → 594.0.1
+  - `aws`: 2.38.6 → 2.42.4
+  - `az`: 2.91.0 → 2.93.0
+
 ## [0.6.4](https://github.com/Scalr/runner/tree/0.6.4) (2026-10-28)
 
 ### Security

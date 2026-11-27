@@ -19,7 +19,7 @@ variable "VERSION" {
 # Populated from versions.json (a native bake variable file) and maintained
 # by ./bump-versions.py.
 #   versions_base     — base layer (Debian base digest); used by every target
-#   versions_full     — extra tools for the full image (kubectl, cloud CLIs, Python 3.14, …)
+#   versions_full     — extra tools for the full image (kubectl, cloud CLIs, Python 3.15, …)
 #   versions_python39 — overrides merged on top for the -python39 image
 variable "versions_base" {
   default = {}

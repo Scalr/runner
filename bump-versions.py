@@ -214,7 +214,7 @@ def get_latest_aws_ssm_plugin() -> str:
 
 
 def _latest_python_version(series: str) -> tuple[str, str]:
-    """Latest (version, release) for the given series (e.g. '3.14' or '3.9').
+    """Latest (version, release) for the given series (e.g. '3.15' or '3.9').
 
     Walks recent releases newest-first — python-build-standalone ships
     different CPython series per release, and older series (e.g. 3.9) appear
@@ -261,8 +261,8 @@ def get_debian_base_digest(image_ref: str) -> str:
 
 
 def get_latest_python_info() -> tuple[str, str]:
-    """Return (version, release), e.g. ('3.14.5', '20260510')."""
-    return _latest_python_version("3.14")
+    """Return (version, release), e.g. ('3.15.2', '20261026')."""
+    return _latest_python_version("3.15")
 
 
 def get_latest_python39_info() -> tuple[str, str]:
@@ -480,7 +480,7 @@ def main() -> int:
     if py_changed:
         refresh_python_shas(lat_v, lat_r)
 
-    # Python 3.9 variant — same upstream as 3.14, override block with plain PYTHON_* keys.
+    # Python 3.9 variant — same upstream as 3.15, override block with plain PYTHON_* keys.
     vs39 = read_versions(SECTION_PY39)
     cur_v39 = vs39.get("PYTHON_VERSION", "")
     cur_r39 = vs39.get("PYTHON_RELEASE", "")
